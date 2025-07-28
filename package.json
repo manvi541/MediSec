@@ -1,0 +1,16 @@
+{
+  "name": "medisec",
+  "version": "1.0.0",
+  "description": "This repository contains the latest version of the MediSec web application, designed to run entirely locally in your browser using HTML, CSS, and JavaScript.",
+  "main": "backend.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
