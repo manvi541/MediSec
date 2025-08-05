@@ -197,8 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectModalForm = document.getElementById('edit-project-form');
     const modalProjectTitle = document.getElementById('modal-project-title');
     const modalProjectDescription = document.getElementById('modal-project-description');
-    const modalProjectImageInput = document.getElementById('modal-project-image');
-    const modalProjectLink = document.getElementById('modal-project-link');
+    const modalProjectImageInput = document.getElementById('modal-project-image'); // This is now URL input
+    const modalProjectLinkInput = document.getElementById('modal-project-link'); // This is now File input
     const deleteProjectModalBtn = document.getElementById('delete-project-modal-btn');
     const cancelProjectModalBtn = document.getElementById('cancel-project-modal-btn');
 
@@ -229,7 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     projectCard.dataset.id = project.id; // Store Firestore document ID
 
                     let imageHtml = project.imageUrl ? `<img src="${project.imageUrl}" alt="${project.title}" class="w-full h-48 object-cover">` : '';
-                    let linkHtml = project.link ? `<a href="${project.link}" target="_blank" rel="noopener noreferrer" class="inline-block mt-4 bg-[#00acc1] hover:bg-[#7a97ab] text-white text-sm font-semibold py-2 px-4 rounded-full transition duration-300">View Project <i class="fas fa-external-link-alt ml-1"></i></a>` : '';
+                    let linkHtml = '';
+                    if (project.fileUrl) { // Assuming 'fileUrl' is where Base64 or direct file link is stored
+                        // For Base64, create a download link
+                        // For actual file hosting, this would be a direct link to the file
+                        const fileName = project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.zip'; // Example file name
+                        linkHtml = `<a href="${project.fileUrl}" download="${fileName}" class="inline-block mt-4 bg-[#00acc1] hover:bg-[#7a97ab] text-white text-sm font-semibold py-2 px-4 rounded-full transition duration-300">Download Project File <i class="fas fa-download ml-1"></i></a>`;
+                    }
+
 
                     projectCard.innerHTML = `
                         ${imageHtml}
@@ -294,20 +301,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const title = document.getElementById('project-title').value;
             const description = document.getElementById('project-description').value;
-            const imageFile = document.getElementById('project-image').files[0];
-            const link = document.getElementById('project-link').value;
+            const imageUrl = document.getElementById('project-image').value; // Now URL
+            const projectFile = document.getElementById('project-link').files[0]; // Now File
 
-            let imageUrl = '';
-            if (imageFile) {
-                // Encode image to Base64 for sending to backend.
-                // For large images or production, consider cloud storage (e.g., Firebase Storage).
-                imageUrl = await encodeFileToBase64(imageFile);
+            let fileUrl = '';
+            if (projectFile) {
+                fileUrl = await encodeFileToBase64(projectFile); // Convert file to Base64
             }
 
-            const newProjectData = { title, description, imageUrl, link };
+            const newProjectData = { title, description, imageUrl, fileUrl }; // Use fileUrl for the project file
 
             try {
-                const response = await fetch('/api/projects', { // POST request to backend
+                const response = await fetch('/api/projects', { // POST request to your server.js API
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newProjectData)
@@ -364,8 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(project => {
                         if (modalProjectTitle) modalProjectTitle.value = project.title;
                         if (modalProjectDescription) modalProjectDescription.value = project.description;
-                        if (modalProjectLink) modalProjectLink.value = project.link;
-                        // Image input is not pre-filled for security reasons; user has to re-upload
+                        if (modalProjectImageInput) modalProjectImageInput.value = project.imageUrl || ''; // Pre-fill image URL
+                        // modalProjectLinkInput (file input) cannot be pre-filled for security.
                     })
                     .catch(error => {
                         console.error('Error fetching project for edit:', error);
@@ -401,30 +406,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const title = modalProjectTitle.value;
             const description = modalProjectDescription.value;
-            const imageFile = modalProjectImageInput.files[0];
-            const link = modalProjectLink.value;
+            const imageUrl = modalProjectImageInput.value; // Now URL
+            const projectFile = modalProjectLinkInput.files[0]; // Now File
 
-            let imageUrl = '';
-            // If editing, try to get existing image URL if no new file is uploaded
+            let fileUrl = '';
+            // If editing, try to get existing file URL if no new file is uploaded
             if (currentEditingProjectId) {
                 try {
                     const existingProjectResponse = await fetch(`/api/projects/${currentEditingProjectId}`);
                     const existingProject = await existingProjectResponse.json();
-                    imageUrl = existingProject.imageUrl || ''; // Keep existing image if not changed
+                    fileUrl = existingProject.fileUrl || ''; // Keep existing file URL if not changed
                 } catch (error) {
-                    console.error('Error fetching existing project for image URL:', error);
+                    console.error('Error fetching existing project for file URL:', error);
                 }
             }
 
-            if (imageFile) {
-                imageUrl = await encodeFileToBase64(imageFile); // New image uploaded
+            if (projectFile) {
+                fileUrl = await encodeFileToBase64(projectFile); // New file uploaded
             }
 
             const updatedProjectData = {
                 title,
                 description,
                 imageUrl,
-                link
+                fileUrl // Use fileUrl for the project file
             };
 
             try {
@@ -476,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Helper function to convert file to base64 (for image uploads)
+    // Helper function to convert file to base64 (for file uploads)
     function encodeFileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -515,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (blogPostsContainer) {
                         const blogCard = `
                             <div class="bg-white rounded-lg shadow-md overflow-hidden p-6">
-                                ${blog.image ? `<img src="${blog.image}" alt="${blog.title}" class="w-full h-48 object-cover mb-4 rounded-md">` : ''}
+                                ${blog.imageUrl ? `<img src="${blog.imageUrl}" alt="${blog.title}" class="w-full h-48 object-cover mb-4 rounded-md">` : ''}
                                 <h3 class="text-xl font-bold text-gray-900 mb-2">${blog.title}</h3>
                                 <p class="text-gray-600 text-sm mb-2">${blog.date} | ${blog.category}</p>
                                 <p class="text-gray-700 mb-4">${blog.excerpt}</p>
@@ -576,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = document.getElementById('blog-date').value;
             const category = document.getElementById('blog-category').value;
             const excerpt = document.getElementById('blog-excerpt').value;
-            const image = document.getElementById('blog-image').value; // Assuming URL for now
+            const imageUrl = document.getElementById('blog-image').value; // Now URL
             const link = document.getElementById('blog-link').value;
 
             if (!title || !date || !category || !excerpt) {
@@ -584,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const newBlogData = { title, date, category, excerpt, image, link };
+            const newBlogData = { title, date, category, excerpt, imageUrl, link }; // Use imageUrl
 
             try {
                 const response = await fetch('/api/blogs', { // POST request to backend
@@ -634,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBlogDate = document.getElementById('modal-blog-date');
     const modalBlogCategory = document.getElementById('modal-blog-category');
     const modalBlogExcerpt = document.getElementById('modal-blog-excerpt');
-    const modalBlogImage = document.getElementById('modal-blog-image');
+    const modalBlogImage = document.getElementById('modal-blog-image'); // Now URL
     const modalBlogLink = document.getElementById('modal-blog-link');
     const deleteBlogModalBtn = document.getElementById('delete-blog-modal-btn');
     const cancelBlogModalBtn = document.getElementById('cancel-blog-modal-btn');
@@ -660,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (modalBlogDate) modalBlogDate.value = blog.date;
                         if (modalBlogCategory) modalBlogCategory.value = blog.category;
                         if (modalBlogExcerpt) modalBlogExcerpt.value = blog.excerpt;
-                        if (modalBlogImage) modalBlogImage.value = blog.image;
+                        if (modalBlogImage) modalBlogImage.value = blog.imageUrl || ''; // Pre-fill image URL
                         if (modalBlogLink) modalBlogLink.value = blog.link;
                     })
                     .catch(error => {
@@ -697,10 +702,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = modalBlogDate.value;
             const category = modalBlogCategory.value;
             const excerpt = modalBlogExcerpt.value;
-            const image = modalBlogImage.value;
+            const imageUrl = modalBlogImage.value; // Now URL
             const link = modalBlogLink.value;
 
-            const updatedBlogData = { title, date, category, excerpt, image, link };
+            const updatedBlogData = { title, date, category, excerpt, imageUrl, link }; // Use imageUrl
 
             try {
                 let response;
@@ -761,7 +766,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const memberNameInput = document.getElementById('member-name');
     const memberTitleInput = document.getElementById('member-title');
     const memberBioInput = document.getElementById('member-bio');
-    const memberImageInput = document.getElementById('member-image'); // File input for image
+    const memberImageInput = document.getElementById('member-image'); // Now URL
+    const addTeamMemberForm = document.getElementById('add-team-member-form'); // New form for adding
+    const newMemberNameInput = document.getElementById('new-member-name');
+    const newMemberTitleInput = document.getElementById('new-member-title');
+    const newMemberBioInput = document.getElementById('new-member-bio');
+    const newMemberImageInput = document.getElementById('new-member-image'); // Now URL
     const deleteMemberBtn = document.getElementById('delete-member-btn');
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     const adminTeamList = document.getElementById('admin-team-list'); // List within admin panel
@@ -852,6 +862,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Handle add new team member form submission
+    if (addTeamMemberForm) {
+        addTeamMemberForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const name = newMemberNameInput.value;
+            const title = newMemberTitleInput.value;
+            const bio = newMemberBioInput.value;
+            const imageUrl = newMemberImageInput.value; // Now URL
+
+            if (!name || !title) {
+                showMessage('Please fill in Name and Title for the new team member.', 'error');
+                return;
+            }
+
+            const newMemberData = { name, title, bio, imageUrl };
+
+            try {
+                const response = await fetch('/api/team', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newMemberData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                showMessage('Team member added successfully!', 'info');
+                addTeamMemberForm.reset();
+                renderTeamMembers();
+            } catch (error) {
+                console.error('Error adding team member:', error);
+                showMessage('Failed to add team member. See console for details.', 'error');
+            }
+        });
+    }
+
     // Open/Close Team Member Modal
     if (addEditTeamBtn) {
         addEditTeamBtn.addEventListener('click', () => openTeamModal());
@@ -893,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (memberNameInput) memberNameInput.value = member.name;
                         if (memberTitleInput) memberTitleInput.value = member.title;
                         if (memberBioInput) memberBioInput.value = member.bio || ''; // Handle potential undefined bio
-                        // Image input is not pre-filled for security reasons
+                        if (memberImageInput) memberImageInput.value = member.imageUrl || ''; // Pre-fill image URL
                     })
                     .catch(error => {
                         console.error('Error fetching team member for edit:', error);
@@ -912,22 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const name = memberNameInput.value;
             const title = memberTitleInput.value;
             const bio = memberBioInput.value;
-            const imageFile = memberImageInput.files[0];
-
-            let imageUrl = '';
-            // If editing, try to get existing image URL if no new file is uploaded
-            if (currentEditingMemberId) {
-                try {
-                    const existingMemberResponse = await fetch(`/api/team/${currentEditingMemberId}`);
-                    const existingMember = await existingMemberResponse.json();
-                    imageUrl = existingMember.imageUrl || '';
-                } catch (error) {
-                    console.error('Error fetching existing member for image URL:', error);
-                }
-            }
-            if (imageFile) {
-                imageUrl = await encodeFileToBase64(imageFile); // New image uploaded
-            }
+            const imageUrl = memberImageInput.value; // Now URL
 
             const memberData = { name, title, bio, imageUrl };
 
@@ -939,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(memberData)
                     });
-                } else { // Add new
+                } else { // This path is for adding new via the modal, but main form is preferred
                     response = await fetch('/api/team', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
