@@ -71,13 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projects.forEach(project => {
             const publicHtml = `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
                     <img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover">
                     <div class="p-6">
                         <h3 class="text-xl font-bold text-gray-900 mb-2">${project.title}</h3>
-                        <p class="text-gray-600">${project.description}</p>
-                        <a href="${project.link}" class="mt-4 inline-block text-[#00acc1] hover:underline" target="_blank" rel="noopener noreferrer">
-                            View Project <i class="fas fa-arrow-right ml-1"></i>
+                        <p class="text-gray-600 mb-4">${project.description}</p>
+                        <a href="${project.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                            View Project <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
                 </div>
@@ -85,9 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
             container.insertAdjacentHTML('beforeend', publicHtml);
 
             const adminHtml = `
-                <div class="admin-list-item flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2">
+                <div class="admin-list-item">
                     <span class="text-gray-800 truncate">${project.title}</span>
-                    <div>
+                    <div class="flex items-center">
                         <button class="edit-project text-blue-500 hover:text-blue-700 mr-2" data-id="${project.id}">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -116,14 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         blogPosts.forEach(blog => {
             const publicHtml = `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover animate-slide-up" style="animation-delay: 0.2s;">
-                    <img src="${blog.image}" alt="${blog.title}" class="w-full h-48 object-cover">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                    <img src="${blog.image || 'https://via.placeholder.com/400x250.png?text=No+Image'}" alt="${blog.title}" class="w-full h-48 object-cover">
                     <div class="p-6">
-                        <span class="text-sm text-gray-500">${blog.date}</span>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">${blog.title}</h3>
+                        <span class="text-sm text-gray-500">${blog.date} | ${blog.category}</span>
+                        <h3 class="text-xl font-bold text-gray-900 my-2">${blog.title}</h3>
                         <p class="text-gray-600">${blog.excerpt}</p>
-                        <a href="${blog.link}" class="mt-4 inline-block text-[#00acc1] hover:underline" target="_blank" rel="noopener noreferrer">
-                            Read More <i class="fas fa-arrow-right ml-1"></i>
+                        <a href="${blog.link}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                            Read More <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
                 </div>
@@ -131,9 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
             container.insertAdjacentHTML('beforeend', publicHtml);
 
             const adminHtml = `
-                <div class="admin-list-item flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2">
+                <div class="admin-list-item">
                     <span class="text-gray-800 truncate">${blog.title}</span>
-                    <div>
+                    <div class="flex items-center">
                         <button class="edit-blog text-blue-500 hover:text-blue-700 mr-2" data-id="${blog.id}">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -162,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         teamMembers.forEach(member => {
             const publicHtml = `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden text-center p-6 team-card animate-zoom-in" style="animation-delay: 0.2s;">
-                    <img src="${member.image}" alt="${member.name}" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                    <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
                     <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
                     <p class="text-[#00acc1] font-medium">${member.title}</p>
                     <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
@@ -172,9 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
             container.insertAdjacentHTML('beforeend', publicHtml);
 
             const adminHtml = `
-                <div class="admin-list-item flex justify-between items-center bg-gray-100 p-2 rounded-md mb-2">
+                <div class="admin-list-item">
                     <span class="text-gray-800 truncate">${member.name}</span>
-                    <div>
+                    <div class="flex items-center">
                         <button class="edit-team text-blue-500 hover:text-blue-700 mr-2" data-id="${member.id}">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             adminList.insertAdjacentHTML('beforeend', adminHtml);
         });
-    });
+    };
 
     // --- Admin Panel & Modal Functionality ---
 
@@ -196,24 +196,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (adminToggle) {
         adminToggle.addEventListener('click', () => {
-            console.log('Admin toggle button clicked');
             adminPanel.classList.toggle('open');
         });
     }
 
     if (closeAdmin) {
         closeAdmin.addEventListener('click', () => {
-            console.log('Close admin panel button clicked');
             adminPanel.classList.remove('open');
         });
     }
+    
+    // Admin Edit Modal Handlers
+    
+    const showModal = (modalId) => {
+        document.getElementById(modalId).classList.remove('hidden');
+    };
 
-    // Handle Project Modals
+    const hideModal = (modalId) => {
+        document.getElementById(modalId).classList.add('hidden');
+    };
+
+    const setupModalCloseHandlers = (modalId) => {
+        const modal = document.getElementById(modalId);
+        const closeBtn = modal.querySelector(`#close-${modalId}`);
+        const cancelBtn = modal.querySelector(`#cancel-${modalId}-btn`);
+        
+        if (closeBtn) closeBtn.addEventListener('click', () => hideModal(modalId));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal(modalId));
+    };
+
+    // Project Modal Logic
     const editProjectModal = document.getElementById('edit-project-modal');
-    const closeEditProjectModalBtn = document.getElementById('close-edit-project-modal');
-    const cancelProjectModalBtn = document.getElementById('cancel-project-modal-btn');
+    setupModalCloseHandlers('edit-project-modal');
     const editProjectForm = document.getElementById('edit-project-form');
-
     let currentEditProjectId = null;
 
     document.getElementById('admin-project-list').addEventListener('click', async (e) => {
@@ -226,7 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('modal-project-title').value = projectToEdit.title;
                 document.getElementById('modal-project-description').value = projectToEdit.description;
                 document.getElementById('modal-project-image').value = projectToEdit.image;
-                editProjectModal.classList.add('open');
+                document.getElementById('modal-project-link').value = projectToEdit.link;
+                showModal('edit-project-modal');
             }
         } else if (e.target.closest('.delete-project')) {
             const id = e.target.closest('.delete-project').dataset.id;
@@ -237,30 +253,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    editProjectForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const updatedProject = {
-            title: document.getElementById('modal-project-title').value,
-            description: document.getElementById('modal-project-description').value,
-            image: document.getElementById('modal-project-image').value,
-        };
-        await updateData('projects', currentEditProjectId, updatedProject);
-        renderProjects();
-        editProjectModal.classList.remove('open');
-    });
-
-    [closeEditProjectModalBtn, cancelProjectModalBtn].forEach(btn => {
-        btn.addEventListener('click', () => {
-            editProjectModal.classList.remove('open');
+    if (editProjectForm) {
+        editProjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedProject = {
+                title: document.getElementById('modal-project-title').value,
+                description: document.getElementById('modal-project-description').value,
+                image: document.getElementById('modal-project-image').value,
+                link: document.getElementById('modal-project-link').value,
+            };
+            await updateData('projects', currentEditProjectId, updatedProject);
+            renderProjects();
+            hideModal('edit-project-modal');
         });
-    });
+    }
 
-    // Handle Blog Post Modals
+    // Blog Modal Logic
     const editBlogModal = document.getElementById('edit-blog-modal');
-    const closeEditBlogModalBtn = document.getElementById('close-edit-blog-modal');
-    const cancelBlogModalBtn = document.getElementById('cancel-blog-modal-btn');
+    setupModalCloseHandlers('edit-blog-modal');
     const editBlogForm = document.getElementById('edit-blog-form');
-
     let currentEditBlogId = null;
 
     document.getElementById('admin-blog-list').addEventListener('click', async (e) => {
@@ -276,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('modal-blog-excerpt').value = blogToEdit.excerpt;
                 document.getElementById('modal-blog-image').value = blogToEdit.image;
                 document.getElementById('modal-blog-link').value = blogToEdit.link;
-                editBlogModal.classList.add('open');
+                showModal('edit-blog-modal');
             }
         } else if (e.target.closest('.delete-blog')) {
             const id = e.target.closest('.delete-blog').dataset.id;
@@ -287,33 +298,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    editBlogForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const updatedBlog = {
-            title: document.getElementById('modal-blog-title').value,
-            date: document.getElementById('modal-blog-date').value,
-            category: document.getElementById('modal-blog-category').value,
-            excerpt: document.getElementById('modal-blog-excerpt').value,
-            image: document.getElementById('modal-blog-image').value,
-            link: document.getElementById('modal-blog-link').value,
-        };
-        await updateData('blogs', currentEditBlogId, updatedBlog);
-        renderBlogPosts();
-        editBlogModal.classList.remove('open');
-    });
-
-    [closeEditBlogModalBtn, cancelBlogModalBtn].forEach(btn => {
-        btn.addEventListener('click', () => {
-            editBlogModal.classList.remove('open');
+    if (editBlogForm) {
+        editBlogForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedBlog = {
+                title: document.getElementById('modal-blog-title').value,
+                date: document.getElementById('modal-blog-date').value,
+                category: document.getElementById('modal-blog-category').value,
+                excerpt: document.getElementById('modal-blog-excerpt').value,
+                image: document.getElementById('modal-blog-image').value,
+                link: document.getElementById('modal-blog-link').value,
+            };
+            await updateData('blogs', currentEditBlogId, updatedBlog);
+            renderBlogPosts();
+            hideModal('edit-blog-modal');
         });
-    });
+    }
 
-    // Handle Team Member Modals
+    // Team Modal Logic
     const editTeamModal = document.getElementById('edit-team-modal');
-    const closeEditTeamModalBtn = document.getElementById('close-edit-team-modal');
-    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    setupModalCloseHandlers('edit-team-modal');
     const editTeamForm = document.getElementById('edit-team-form');
-
     let currentEditMemberId = null;
 
     document.getElementById('admin-team-list').addEventListener('click', async (e) => {
@@ -327,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('member-title').value = memberToEdit.title;
                 document.getElementById('member-bio').value = memberToEdit.bio;
                 document.getElementById('member-image').value = memberToEdit.image;
-                editTeamModal.classList.add('open');
+                showModal('edit-team-modal');
             }
         } else if (e.target.closest('.delete-team')) {
             const id = e.target.closest('.delete-team').dataset.id;
@@ -338,24 +343,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    editTeamForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const updatedMember = {
-            name: document.getElementById('member-name').value,
-            title: document.getElementById('member-title').value,
-            bio: document.getElementById('member-bio').value,
-            image: document.getElementById('member-image').value,
-        };
-        await updateData('team', currentEditMemberId, updatedMember);
-        renderTeamMembers();
-        editTeamModal.classList.remove('open');
-    });
-
-    [closeEditTeamModalBtn, cancelEditBtn].forEach(btn => {
-        btn.addEventListener('click', () => {
-            editTeamModal.classList.remove('open');
+    if (editTeamForm) {
+        editTeamForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedMember = {
+                name: document.getElementById('member-name').value,
+                title: document.getElementById('member-title').value,
+                bio: document.getElementById('member-bio').value,
+                image: document.getElementById('member-image').value,
+            };
+            await updateData('team', currentEditMemberId, updatedMember);
+            renderTeamMembers();
+            hideModal('edit-team-modal');
         });
-    });
+    }
 
     // --- Admin Add Forms ---
 
@@ -387,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.reset();
     });
 
-    document.querySelector('#admin-panel #project-upload-form').addEventListener('submit', async (e) => {
+    document.getElementById('project-upload-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newProject = {
             title: document.getElementById('project-title').value,
