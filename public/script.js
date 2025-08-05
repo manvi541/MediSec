@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             adminList.insertAdjacentHTML('beforeend', adminHtml);
         });
-    };
+    });
 
     // --- Admin Panel & Modal Functionality ---
 
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('member-name').value = memberToEdit.name;
                 document.getElementById('member-title').value = memberToEdit.title;
                 document.getElementById('member-bio').value = memberToEdit.bio;
-                document.getElementById('member-image').value = memberToEdit.image;
+                document.getElementById('member-image').value = memberToedit.image;
                 editTeamModal.classList.add('open');
             }
         } else if (e.target.closest('.delete-team')) {
@@ -386,12 +386,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const newProject = {
             title: document.getElementById('project-title').value,
             description: document.getElementById('project-description').value,
-            image: document.getElementById('project-image').value,
-            // Note: Project link is currently handled by a file input.
-            // In a real server setup, you would upload the file to a storage service
-            // (like Firebase Storage) and save the resulting URL.
-            // For now, this will simply be a placeholder.
-            link: '#'
+            image: document.getElementById('project-image').value, // Correctly grabs the image URL
+            // The link field is still handled by a separate file input and will need a more complex server-side implementation for file uploads.
+            // For now, we will use a placeholder or the provided URL from the file input.
+            link: document.getElementById('project-link').value // Get the file URL if available
         };
         await postData('projects', newProject);
         renderProjects();
