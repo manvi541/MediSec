@@ -220,7 +220,7 @@
         }
     </style>
 </head>
-<body class="font-sans bg-gray-50">
+<body class="font-sans bg-gray-50 overflow-x-hidden">
     <!-- Custom Message Box HTML -->
     <div id="custom-message-box" class="hidden">
         <div id="custom-message-content" class="bg-white p-8 rounded-lg shadow-xl">
@@ -427,16 +427,15 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="project-image">
-                            Cover Image
+                            Cover Image URL
                         </label>
-                        <input class="w-full" id="project-image" type="file" accept="image/*">
+                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="project-image" type="url" placeholder="https://example.com/image.jpg">
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="project-link">
-                            Project Link (optional)
+                            Project File (Upload)
                         </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md"
-                               id="project-link" type="url">
+                        <input class="w-full" id="project-link" type="file" accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
                     </div>
                     <button type="submit" class="w-full bg-[#00acc1] hover:bg-[#7a97ab] text-white font-bold py-2 px-4 rounded transition duration-300">
                         Upload Project
@@ -468,15 +467,15 @@
                         </div>
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-project-image">
-                                Cover Image (re-upload to change)
+                                Cover Image URL
                             </label>
-                            <input class="w-full" id="modal-project-image" type="file" accept="image/*">
+                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-project-image" type="url" placeholder="https://example.com/image.jpg">
                         </div>
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-project-link">
-                                Project Link (optional)
+                                Project File (Upload)
                             </label>
-                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-project-link" type="url">
+                            <input class="w-full" id="modal-project-link" type="file" accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
                         </div>
                         <div class="flex justify-between">
                             <button type="button" id="delete-project-modal-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 hidden">
@@ -576,9 +575,9 @@
                         </div>
                         <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="member-image">
-                                Profile Image
+                                Profile Image URL
                             </label>
-                            <input class="w-full" id="member-image" type="file">
+                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-image" type="url" placeholder="https://example.com/profile.jpg">
                         </div>
                         <div class="flex justify-between">
                             <button type="button" id="delete-member-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 hidden">
@@ -818,11 +817,11 @@
                 <label for="project-description" class="admin-label">Description:</label>
                 <textarea id="project-description" class="admin-input" rows="3" placeholder="A brief description of the project..." required></textarea>
 
-                <label for="project-image" class="admin-label">Image (Upload File):</label>
-                <input type="file" id="project-image" class="admin-input" accept="image/*">
+                <label for="project-image" class="admin-label">Cover Image URL:</label>
+                <input type="url" id="project-image" class="admin-input" placeholder="https://example.com/image.jpg">
 
-                <label for="project-link" class="admin-label">Project Link (e.g., GitHub, Demo):</label>
-                <input type="url" id="project-link" class="admin-input" placeholder="https://github.com/your-project">
+                <label for="project-link" class="admin-label">Project File (Upload):</label>
+                <input type="file" id="project-link" class="admin-input" accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
 
                 <button type="submit" class="admin-button w-full">Add Project</button>
             </form>
@@ -849,8 +848,8 @@
                 <label for="new-member-bio" class="admin-label">Bio:</label>
                 <textarea id="new-member-bio" class="admin-input" rows="3" placeholder="A short bio about the team member..."></textarea>
 
-                <label for="new-member-image" class="admin-label">Profile Image:</label>
-                <input type="file" id="new-member-image" class="admin-input" accept="image/*">
+                <label for="new-member-image" class="admin-label">Profile Image URL:</label>
+                <input type="url" id="new-member-image" class="admin-input" placeholder="https://example.com/profile.jpg">
 
                 <button type="submit" class="admin-button w-full">Add Team Member</button>
             </form>
