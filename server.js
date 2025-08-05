@@ -9,12 +9,25 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Create data directory if it doesn't exist
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir);
+}
+
 // Data file paths
 const dataPaths = {
-    projects: path.join(__dirname, 'data', 'projects.json'),
-    blogs: path.join(__dirname, 'data', 'blogs.json'),
-    team: path.join(__dirname, 'data', 'team.json')
+    projects: path.join(dataDir, 'projects.json'),
+    blogs: path.join(dataDir, 'blogs.json'),
+    team: path.join(dataDir, 'team.json')
 };
+
+// Initialize empty data files if they don't exist
+Object.values(dataPaths).forEach(filePath => {
+    if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, '[]');
+    }
+});
 
 // Helper function to read data from JSON files
 const readData = (filePath) => {
