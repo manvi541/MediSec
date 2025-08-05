@@ -9,6 +9,15 @@
     <link rel="icon" href="https://raw.githubusercontent.com/manvi541/website/refs/heads/main/Cyberhealth__1_-removebg-preview.png" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Ensure HTML and Body take full screen and remove default margins/padding */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden; /* Keep this to prevent horizontal scroll */
+        }
+
         /* Custom CSS for elements that need more styling */
         .hero-gradient {
             /* Updated gradient using your theme colors */
@@ -220,7 +229,7 @@
         }
     </style>
 </head>
-<body class="font-sans bg-gray-50 overflow-x-hidden">
+<body class="font-sans bg-gray-50">
     <!-- Custom Message Box HTML -->
     <div id="custom-message-box" class="hidden">
         <div id="custom-message-content" class="bg-white p-8 rounded-lg shadow-xl">
