@@ -1,108 +1,154 @@
-/* Custom CSS for MediSec Website */
+/* Add any custom CSS here that is not handled by Tailwind or inline styles in index.html */
 
-/* --- General Utilities --- */
+/* Your provided CSS styles below */
+body {
+    padding: 2rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
+}
 
-/* Fades an element in */
+h1 {
+    font-size: 16px; /* This is a very small font size for an H1 on a modern website. Tailwind's default H1s are much larger (e.g., text-4xl). */
+    margin-top: 0;
+}
+
+p {
+    color: rgb(107, 114, 128); /* This is similar to Tailwind's text-gray-600 */
+    font-size: 15px;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+.card {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 16px;
+    border: 1px solid lightgray;
+    border-radius: 16px;
+}
+
+.card p:last-child {
+    margin-bottom: 0;
+}
+
+/* Animation classes (make sure these are also in style.css) */
+.animate-fade-in {
+    opacity: 0;
+    animation: fadeIn 1s ease-in-out forwards;
+}
+
+.animate-bounce {
+    animation: bounce 2s infinite;
+}
+
+.animate-rotate {
+    animation: rotate 3s linear infinite;
+}
+
+.animate-pulse-slow {
+    animation: pulse 4s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.animate-slide-up {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: slideUp 1s ease-in-out forwards;
+}
+
+.animate-slide-right {
+    opacity: 0;
+    transform: translateX(-30px);
+    animation: slideRight 1s ease-in-out forwards;
+}
+
+.animate-slide-left {
+    opacity: 0;
+    transform: translateX(30px);
+    animation: slideLeft 1s ease-in-out forwards;
+}
+
+.animate-zoom-in {
+    opacity: 0;
+    transform: scale(0.95);
+    animation: zoomIn 1s ease-in-out forwards;
+}
+
 @keyframes fadeIn {
-    from { opacity: 0; }
     to { opacity: 1; }
 }
-.animate-fade-in {
-    animation: fadeIn 1s ease-in-out;
-}
 
-/* Slides an element up from the bottom */
 @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-.animate-slide-up {
-    animation: slideUp 0.6s ease-out;
-}
-
-/* Slides an element in from the left */
-@keyframes slideLeft {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-.animate-slide-left {
-    animation: slideLeft 0.6s ease-out;
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Slides an element in from the right */
 @keyframes slideRight {
-    from { transform: translateX(20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-.animate-slide-right {
-    animation: slideRight 0.6s ease-out;
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
-/* Zooms an element in */
+@keyframes slideLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 @keyframes zoomIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-.animate-zoom-in {
-    animation: zoomIn 0.6s ease-out;
-}
-
-/* Adds a subtle pulsing effect */
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-.pulse {
-    animation: pulse 2s infinite ease-in-out;
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-/* Slow pulse for team section */
-@keyframes pulse-slow {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-}
-.animate-pulse-slow {
-    animation: pulse-slow 3s infinite ease-in-out;
-}
-
-/* Stat counter animation (managed by JS, but this provides a base) */
-.stat-animate {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.stat-animate:hover {
+/* Custom CSS for elements that need more styling */
+.card-hover:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
-
-/* --- Hero Section Styling --- */
-.hero-title-shadow {
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+.nav-link {
+    position: relative;
 }
-
-/* --- Section Title Styling --- */
-.section-title-shadow {
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+.nav-link:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: #00acc1;
+    transition: width 0.3s ease;
 }
-
-/* --- Team Member Card Styling --- */
-.team-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.team-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-/* --- Instagram Feed Styling --- */
-.instagram-embed-container {
-    max-width: 100%;
-    margin: 0 auto;
-}
-.elfsight-app-9689fcdd-b5ea-4fa2-9a81-8eb3790504fc {
+.nav-link:hover:after {
     width: 100%;
 }
-
-/* --- Admin Panel Styles --- */
+.active:after {
+    width: 100%;
+}
+.form-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 172, 193, 0.5);
+}
+/* Admin Panel styles (Keeping these for now, but the JS behind them is removed) */
 #admin-toggle {
     position: fixed;
     bottom: 20px;
@@ -124,68 +170,64 @@
 #admin-toggle:hover {
     background-color: #7a97ab;
 }
-
 #admin-panel {
     position: fixed;
     top: 0;
-    right: -20rem; /* Start off-screen */
-    width: 20rem; /* Fixed width for the panel */
+    right: 0;
+    width: 350px;
     height: 100%;
-    background-color: #1f2937; /* Darker background for admin panel */
-    box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+    background-color: white;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
     z-index: 1001;
-    transition: right 0.3s ease-out; /* Transition for sliding */
+    display: none; /* Set to none by default as JS won't open it */
     overflow-y: auto;
-    padding: 1rem;
-    color: white; /* Default text color for admin panel */
+    padding: 20px;
+    transition: transform 0.3s ease-out;
+    transform: translateX(100%);
 }
 #admin-panel.open {
-    right: 0; /* Slide in */
+    transform: translateX(0);
 }
 #close-admin {
+    position: absolute;
+    top: 15px;
+    right: 15px;
     background: none;
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #9ca3af; /* Light gray for close button */
-    transition: color 0.3s;
+    color: #6b7280;
 }
 #close-admin:hover {
-    color: white;
+    color: #1f2937;
 }
 .admin-section {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #374151; /* Darker border for sections */
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
 }
 .admin-section:last-child {
     border-bottom: none;
 }
 .admin-label {
     font-weight: 600;
-    color: #e5e7eb; /* Lighter text for labels */
-    margin-bottom: 0.5rem;
+    color: #1f2937;
+    margin-bottom: 8px;
     display: block;
 }
 .admin-input {
     width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #4b5563; /* Darker border for inputs */
-    border-radius: 0.375rem;
-    margin-bottom: 0.75rem;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    margin-bottom: 12px;
     font-size: 0.9rem;
-    background-color: #374151; /* Darker background for inputs */
-    color: white;
-}
-.admin-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 172, 193, 0.5);
 }
 .admin-button {
     background-color: #00acc1;
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 6px; /* Corrected from 66px */
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
     border: none;
     font-size: 0.9rem;
@@ -195,129 +237,47 @@
     background-color: #7a97ab;
 }
 .admin-list-item {
-    background-color: #374151; /* Darker background for list items */
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    margin-bottom: 0.5rem;
+    background-color: #f3f4f6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #e5e7eb; /* Lighter text for list items */
 }
 .admin-list-item button {
     background: none;
     border: none;
+    color: #ef4444;
     cursor: pointer;
     font-size: 0.8rem;
-    color: #9ca3af; /* Default color for action buttons */
-}
-.admin-list-item button.edit-project,
-.admin-list-item button.edit-blog,
-.admin-list-item button.edit-team {
-    color: #60a5fa; /* Blue for edit buttons */
-}
-.admin-list-item button.delete-project,
-.admin-list-item button.delete-blog,
-.admin-list-item button.delete-team {
-    color: #ef4444; /* Red for delete buttons */
 }
 .admin-list-item button:hover {
-    opacity: 0.8;
+    color: #dc2626;
+}
+/* Animation for stats */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.stat-animate {
+    animation: countUp 1s ease-out forwards;
+}
+/* Pulse animation for CTA */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.pulse:hover {
+    animation: pulse 1.5s infinite;
 }
 
-
-/* --- Modal Styles --- */
-/* Base styles for all modals */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none; /* Hidden by default */
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+/* Shadow for titles */
+.hero-title-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
-.modal-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
-    max-width: 600px;
-    width: 90%;
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-/* Use the `open` class to show the modal */
-.modal.open {
-    display: flex;
-}
-
-/* Close button styling */
-.close-modal {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 1.5rem;
-    color: #6b7280; /* gray-500 */
-    cursor: pointer;
-    background: none;
-    border: none;
-}
-
-.close-modal:hover {
-    color: #1f2937; /* gray-800 */
-}
-
-/* Form input styling within modals */
-.modal-form-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-}
-.modal-form-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 172, 193, 0.5); /* Focus color */
-}
-
-/* Button styling within modals */
-.modal-button {
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    border: none;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
-}
-
-.modal-button-primary {
-    background-color: #00acc1;
-    color: white;
-}
-.modal-button-primary:hover {
-    background-color: #7a97ab;
-}
-
-.modal-button-secondary {
-    background-color: #d1d5db;
-    color: #374151;
-}
-.modal-button-secondary:hover {
-    background-color: #9ca3af;
-}
-
-.modal-button-danger {
-    background-color: #ef4444;
-    color: white;
-}
-.modal-button-danger:hover {
-    background-color: #dc2626;
+.section-title-shadow {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
