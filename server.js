@@ -1,227 +1,154 @@
-// Import necessary modules
 const express = require('express');
 const path = require('path');
-const admin = require('firebase-admin'); // Firebase Admin SDK for server-side access
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to parse JSON request bodies
 app.use(express.json());
-
-// Serve static files from the 'public' directory
-// This ensures your HTML, CSS, and client-side JS are delivered to the browser
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Firebase Admin SDK Initialization ---
-// IMPORTANT: For production, store your service account key securely as an environment variable.
-// On Render, you would set an environment variable named FIREBASE_SERVICE_ACCOUNT_KEY
-// and paste the entire JSON content of your Firebase service account key file into it.
-// Make sure to replace the placeholder below with the actual environment variable.
-if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+// Data file paths
+const dataPaths = {
+    projects: path.join(__dirname, 'data', 'projects.json'),
+    blogs: path.join(__dirname, 'data', 'blogs.json'),
+    team: path.join(__dirname, 'data', 'team.json')
+};
+
+// Helper function to read data from JSON files
+const readData = (filePath) => {
     try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-        console.log('Firebase Admin SDK initialized successfully.');
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
     } catch (error) {
-        console.error('Error initializing Firebase Admin SDK:', error);
-        // Exit process or handle error appropriately if Firebase init fails
-        process.exit(1);
+        console.error(`Error reading data from ${filePath}:`, error);
+        return [];
     }
-} else {
-    console.error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable not set. Firebase Admin SDK not initialized.');
-    // For local development without the env var, you might load a local key file:
-    // const serviceAccount = require('./path/to/your/serviceAccountKey.json');
-    // admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-}
+};
 
-const db = admin.firestore(); // Get Firestore instance
-
-// --- API Endpoints for Projects ---
-
-// GET all projects
-app.get('/api/projects', async (req, res) => {
+// Helper function to write data to JSON files
+const writeData = (filePath, data) => {
     try {
-        const projectsRef = db.collection('projects');
-        const snapshot = await projectsRef.get();
-        const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.json(projects);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     } catch (error) {
-        console.error('Error fetching projects:', error);
-        res.status(500).json({ message: 'Failed to fetch projects', error: error.message });
+        console.error(`Error writing data to ${filePath}:`, error);
+    }
+};
+
+// --- API Endpoints ---
+
+// Projects
+app.get('/api/projects', (req, res) => {
+    const projects = readData(dataPaths.projects);
+    res.json(projects);
+});
+
+app.post('/api/projects', (req, res) => {
+    const projects = readData(dataPaths.projects);
+    const newProject = { id: uuidv4(), ...req.body };
+    projects.push(newProject);
+    writeData(dataPaths.projects, projects);
+    res.status(201).json(newProject);
+});
+
+app.put('/api/projects/:id', (req, res) => {
+    const { id } = req.params;
+    let projects = readData(dataPaths.projects);
+    const index = projects.findIndex(p => p.id === id);
+    if (index !== -1) {
+        projects[index] = { id, ...req.body };
+        writeData(dataPaths.projects, projects);
+        res.json(projects[index]);
+    } else {
+        res.status(404).json({ message: 'Project not found' });
     }
 });
 
-// POST a new project
-app.post('/api/projects', async (req, res) => {
-    try {
-        const newProject = req.body;
-        // Basic validation
-        if (!newProject.title || !newProject.description) {
-            return res.status(400).json({ message: 'Title and description are required.' });
-        }
-        // newProject.imageUrl will come as a URL string
-        // newProject.fileUrl will come as a Base64 string for the uploaded file
-        const docRef = await db.collection('projects').add(newProject);
-        res.status(201).json({ id: docRef.id, ...newProject });
-    } catch (error) {
-        console.error('Error adding project:', error);
-        res.status(500).json({ message: 'Failed to add project', error: error.message });
+app.delete('/api/projects/:id', (req, res) => {
+    const { id } = req.params;
+    let projects = readData(dataPaths.projects);
+    projects = projects.filter(p => p.id !== id);
+    writeData(dataPaths.projects, projects);
+    res.status(200).json({ message: 'Project deleted' });
+});
+
+// Blogs
+app.get('/api/blogs', (req, res) => {
+    const blogs = readData(dataPaths.blogs);
+    res.json(blogs);
+});
+
+app.post('/api/blogs', (req, res) => {
+    const blogs = readData(dataPaths.blogs);
+    const newBlog = { id: uuidv4(), ...req.body };
+    blogs.push(newBlog);
+    writeData(dataPaths.blogs, blogs);
+    res.status(201).json(newBlog);
+});
+
+app.put('/api/blogs/:id', (req, res) => {
+    const { id } = req.params;
+    let blogs = readData(dataPaths.blogs);
+    const index = blogs.findIndex(b => b.id === id);
+    if (index !== -1) {
+        blogs[index] = { id, ...req.body };
+        writeData(dataPaths.blogs, blogs);
+        res.json(blogs[index]);
+    } else {
+        res.status(404).json({ message: 'Blog not found' });
     }
 });
 
-// PUT (update) an existing project by ID
-app.put('/api/projects/:id', async (req, res) => {
-    try {
-        const projectId = req.params.id;
-        const updatedData = req.body;
-        // updatedData.imageUrl will be a URL string
-        // updatedData.fileUrl will be a Base64 string if a new file was uploaded, otherwise it will be the old one
-        await db.collection('projects').doc(projectId).update(updatedData);
-        res.json({ message: 'Project updated successfully', id: projectId });
-    } catch (error) {
-        console.error('Error updating project:', error);
-        res.status(500).json({ message: 'Failed to update project', error: error.message });
+app.delete('/api/blogs/:id', (req, res) => {
+    const { id } = req.params;
+    let blogs = readData(dataPaths.blogs);
+    blogs = blogs.filter(b => b.id !== id);
+    writeData(dataPaths.blogs, blogs);
+    res.status(200).json({ message: 'Blog deleted' });
+});
+
+// Team
+app.get('/api/team', (req, res) => {
+    const team = readData(dataPaths.team);
+    res.json(team);
+});
+
+app.post('/api/team', (req, res) => {
+    const team = readData(dataPaths.team);
+    const newMember = { id: uuidv4(), ...req.body };
+    team.push(newMember);
+    writeData(dataPaths.team, team);
+    res.status(201).json(newMember);
+});
+
+app.put('/api/team/:id', (req, res) => {
+    const { id } = req.params;
+    let team = readData(dataPaths.team);
+    const index = team.findIndex(m => m.id === id);
+    if (index !== -1) {
+        team[index] = { id, ...req.body };
+        writeData(dataPaths.team, team);
+        res.json(team[index]);
+    } else {
+        res.status(404).json({ message: 'Team member not found' });
     }
 });
 
-// DELETE a project by ID
-app.delete('/api/projects/:id', async (req, res) => {
-    try {
-        const projectId = req.params.id;
-        await db.collection('projects').doc(projectId).delete();
-        res.json({ message: 'Project deleted successfully', id: projectId });
-    } catch (error) {
-        console.error('Error deleting project:', error);
-        res.status(500).json({ message: 'Failed to delete project', error: error.message });
-    }
+app.delete('/api/team/:id', (req, res) => {
+    const { id } = req.params;
+    let team = readData(dataPaths.team);
+    team = team.filter(m => m.id !== id);
+    writeData(dataPaths.team, team);
+    res.status(200).json({ message: 'Team member deleted' });
 });
 
-// --- API Endpoints for Blog Posts (similar to projects) ---
-
-// GET all blog posts
-app.get('/api/blogs', async (req, res) => {
-    try {
-        const blogsRef = db.collection('blogPosts');
-        const snapshot = await blogsRef.get();
-        const blogPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.json(blogPosts);
-    } catch (error) {
-        console.error('Error fetching blog posts:', error);
-        res.status(500).json({ message: 'Failed to fetch blog posts', error: error.message });
-    }
-});
-
-// POST a new blog post
-app.post('/api/blogs', async (req, res) => {
-    try {
-        const newBlogPost = req.body;
-        if (!newBlogPost.title || !newBlogPost.excerpt) {
-            return res.status(400).json({ message: 'Title and excerpt are required.' });
-        }
-        // newBlogPost.imageUrl will come as a URL string
-        const docRef = await db.collection('blogPosts').add(newBlogPost);
-        res.status(201).json({ id: docRef.id, ...newBlogPost });
-    } catch (error) {
-        console.error('Error adding blog post:', error);
-        res.status(500).json({ message: 'Failed to add blog post', error: error.message });
-    }
-});
-
-// PUT (update) an existing blog post by ID
-app.put('/api/blogs/:id', async (req, res) => {
-    try {
-        const blogId = req.params.id;
-        const updatedData = req.body;
-        // updatedData.imageUrl will be a URL string
-        await db.collection('blogPosts').doc(blogId).update(updatedData);
-        res.json({ message: 'Blog post updated successfully', id: blogId });
-    } catch (error) {
-        console.error('Error updating blog post:', error);
-        res.status(500).json({ message: 'Failed to update blog post', error: error.message });
-    }
-});
-
-// DELETE a blog post by ID
-app.delete('/api/blogs/:id', async (req, res) => {
-    try {
-        const blogId = req.params.id;
-        await db.collection('blogPosts').doc(blogId).delete();
-        res.json({ message: 'Blog post deleted successfully', id: blogId });
-    } catch (error) {
-        console.error('Error deleting blog post:', error);
-        res.status(500).json({ message: 'Failed to delete blog post', error: error.message });
-    }
-});
-
-// --- API Endpoints for Team Members (similar to projects) ---
-
-// GET all team members
-app.get('/api/team', async (req, res) => {
-    try {
-        const teamRef = db.collection('teamMembers');
-        const snapshot = await teamRef.get();
-        const teamMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.json(teamMembers);
-    } catch (error) {
-        console.error('Error fetching team members:', error);
-        res.status(500).json({ message: 'Failed to fetch team members', error: error.message });
-    }
-});
-
-// POST a new team member
-app.post('/api/team', async (req, res) => {
-    try {
-        const newTeamMember = req.body;
-        if (!newTeamMember.name || !newTeamMember.title) {
-            return res.status(400).json({ message: 'Name and title are required.' });
-        }
-        // newTeamMember.imageUrl will come as a URL string
-        const docRef = await db.collection('teamMembers').add(newTeamMember);
-        res.status(201).json({ id: docRef.id, ...newTeamMember });
-    } catch (error) {
-        console.error('Error adding team member:', error);
-        res.status(500).json({ message: 'Failed to add team member', error: error.message });
-    }
-});
-
-// PUT (update) an existing team member by ID
-app.put('/api/team/:id', async (req, res) => {
-    try {
-        const memberId = req.params.id;
-        const updatedData = req.body;
-        // updatedData.imageUrl will be a URL string
-        await db.collection('teamMembers').doc(memberId).update(updatedData);
-        res.json({ message: 'Team member updated successfully', id: memberId });
-    } catch (error) {
-        console.error('Error updating team member:', error);
-        res.status(500).json({ message: 'Failed to update team member', error: error.message });
-    }
-});
-
-// DELETE a team member by ID
-app.delete('/api/team/:id', async (req, res) => {
-    try {
-        const memberId = req.params.id;
-        await db.collection('teamMembers').doc(memberId).delete();
-        res.json({ message: 'Team member deleted successfully', id: memberId });
-    } catch (error) {
-        console.error('Error deleting team member:', error);
-        res.status(500).json({ message: 'Failed to delete team member', error: error.message });
-    }
-});
-
-
-// Catch-all for any other routes not defined, serves index.html
-// This is important for single-page applications where client-side routing is used
+// Serve the HTML file for all other routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
