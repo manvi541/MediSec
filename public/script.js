@@ -49,6 +49,7 @@ function encodeFileToBase64(file) {
     });
 }
 
+
 // --- Main Rendering and CRUD Functions (Now in global scope) ---
 
 // Function to handle fetching and rendering for any collection
@@ -56,10 +57,10 @@ async function renderCollection(endpoint, containerId, adminListId, renderCallba
     const container = document.getElementById(containerId);
     const adminList = document.getElementById(adminListId);
 
-    if (!container) return; // public container is mandatory
+    if (!container || !adminList) return;
 
     container.innerHTML = '<p class="col-span-full text-center text-gray-500">Loading...</p>';
-    if (adminList) adminList.innerHTML = '';
+    adminList.innerHTML = '';
 
     try {
         const response = await fetch(endpoint);
@@ -68,25 +69,19 @@ async function renderCollection(endpoint, containerId, adminListId, renderCallba
 
         container.innerHTML = '';
         if (items.length === 0) {
-            const noItemsMessage = '<p class="col-span-full text-center text-gray-500">No items added yet.</p>';
-            container.innerHTML = noItemsMessage;
-            if (adminList) adminList.innerHTML = noItemsMessage;
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No items added yet.</p>';
         } else {
             items.forEach(item => {
                 const publicHtml = renderCallback(item, false);
                 container.insertAdjacentHTML('beforeend', publicHtml);
 
-                if (adminList) {
-                    const adminHtml = renderCallback(item, true);
-                    adminList.insertAdjacentHTML('beforeend', adminHtml);
-                }
+                const adminHtml = renderCallback(item, true);
+                adminList.insertAdjacentHTML('beforeend', adminHtml);
             });
         }
     } catch (error) {
         console.error(`Error fetching from ${endpoint}:`, error);
-        const errorMessage = `<p class="col-span-full text-center text-red-500">Failed to load data. Check server logs.</p>`;
-        container.innerHTML = errorMessage;
-        if (adminList) adminList.innerHTML = errorMessage;
+        container.innerHTML = `<p class="col-span-full text-center text-red-500">Failed to load data. Check server logs.</p>`;
     }
 }
 
@@ -104,22 +99,6 @@ async function deleteItem(endpoint, id, renderFunction) {
             }
         }
     });
-}
-
-// Function to update an item (generic)
-async function updateItem(endpoint, id, updatedData, successCallback) {
-    try {
-        const response = await fetch(`${endpoint}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData)
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        showMessage('Item updated successfully!', 'info', successCallback);
-    } catch (error) {
-        console.error('Error updating item:', error);
-        showMessage('Failed to update item. See console for details.', 'error');
-    }
 }
 
 // --- Project Specific Logic ---
@@ -151,24 +130,6 @@ function renderProject(project, isAdmin) {
     }
 }
 
-// Function to open the edit project modal
-async function openProjectModal(id) {
-    const modal = document.getElementById('edit-project-modal');
-    const form = document.getElementById('edit-project-form');
-    const response = await fetch(`/api/projects/${id}`);
-    const project = await response.json();
-
-    if (project) {
-        document.getElementById('edit-project-id').value = project.id;
-        document.getElementById('edit-project-title').value = project.title;
-        document.getElementById('edit-project-description').value = project.description;
-        document.getElementById('edit-project-image').value = project.imageUrl;
-        // Note: Project file is not editable via the form
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-}
-
 // --- Blog Specific Logic ---
 function renderBlog(blog, isAdmin) {
     const imageHtml = blog.imageUrl ? `<img src="${blog.imageUrl}" alt="${blog.title}" class="w-full h-48 object-cover mb-4 rounded-md">` : '';
@@ -194,26 +155,6 @@ function renderBlog(blog, isAdmin) {
                 ${linkHtml}
             </div>
         `;
-    }
-}
-
-// Function to open the edit blog modal
-async function openBlogModal(id) {
-    const modal = document.getElementById('edit-blog-modal');
-    const form = document.getElementById('edit-blog-form');
-    const response = await fetch(`/api/blogs/${id}`);
-    const blog = await response.json();
-
-    if (blog) {
-        document.getElementById('edit-blog-id').value = blog.id;
-        document.getElementById('edit-blog-title').value = blog.title;
-        document.getElementById('edit-blog-date').value = blog.date;
-        document.getElementById('edit-blog-category').value = blog.category;
-        document.getElementById('edit-blog-excerpt').value = blog.excerpt;
-        document.getElementById('edit-blog-image').value = blog.imageUrl;
-        document.getElementById('edit-blog-link').value = blog.link;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
     }
 }
 
@@ -249,29 +190,9 @@ function renderTeamMember(member, isAdmin) {
     }
 }
 
-// Function to open the edit team member modal
-async function openTeamModal(id) {
-    const modal = document.getElementById('edit-team-modal');
-    const form = document.getElementById('edit-team-form');
-    const response = await fetch(`/api/team/${id}`);
-    const member = await response.json();
-
-    if (member) {
-        document.getElementById('edit-team-id').value = member.id;
-        document.getElementById('edit-team-name').value = member.name;
-        document.getElementById('edit-team-title').value = member.title;
-        document.getElementById('edit-team-image').value = member.imageUrl;
-        document.getElementById('edit-team-github').value = member.githubUrl;
-        document.getElementById('edit-team-linkedin').value = member.linkedinUrl;
-        document.getElementById('edit-team-twitter').value = member.twitterUrl;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-}
-
 // --- Main DOMContentLoaded Event Listener ---
 document.addEventListener('DOMContentLoaded', () => {
-    // --- UI & Scroll Logic (remains unchanged) ---
+    // UI Logic (keep this as-is)
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
     if (mobileMenuButton && mobileMenu) mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
@@ -336,15 +257,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (projectUploadSection) projectUploadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    // --- Initial Data Loading ---
+    // --- CRITICAL FIX: Initial Data Loading ---
+    // These functions are now called on page load to fetch and render data
     renderCollection('/api/projects', 'projects-container', 'admin-project-list', renderProject);
     renderCollection('/api/blogs', 'blog-posts-container', 'admin-blog-list', renderBlog);
     renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember);
 
-    // --- Dynamic Event Listeners for Delete/Edit ---
+    // --- Dynamic Event Listeners (Must be inside DOMContentLoaded) ---
     document.addEventListener('click', function(e) {
         const id = e.target.dataset.id;
-        const editModal = e.target.closest('.fixed');
         if (e.target.matches('.delete-project-btn-admin')) {
             deleteItem('/api/projects', id, () => renderCollection('/api/projects', 'projects-container', 'admin-project-list', renderProject));
         } else if (e.target.matches('.edit-project-btn-admin')) {
@@ -357,19 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteItem('/api/team', id, () => renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember));
         } else if (e.target.matches('.edit-team-btn-admin')) {
             openTeamModal(id);
-        } else if (e.target.matches('#close-edit-project-modal')) {
-            document.getElementById('edit-project-modal').classList.add('hidden');
-            document.getElementById('edit-project-modal').classList.remove('flex');
-        } else if (e.target.matches('#close-edit-blog-modal')) {
-            document.getElementById('edit-blog-modal').classList.add('hidden');
-            document.getElementById('edit-blog-modal').classList.remove('flex');
-        } else if (e.target.matches('#close-edit-team-modal')) {
-            document.getElementById('edit-team-modal').classList.add('hidden');
-            document.getElementById('edit-team-modal').classList.remove('flex');
         }
     });
 
-    // --- Form Submission Logic for Add Forms (remains unchanged) ---
+    // --- Form Submission Logic (Must be inside DOMContentLoaded or have global references) ---
     const projectUploadForm = document.getElementById('project-upload-form');
     if (projectUploadForm) {
         projectUploadForm.addEventListener('submit', async function(e) {
@@ -398,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
     const blogUploadForm = document.getElementById('blog-upload-form');
     if (blogUploadForm) {
         blogUploadForm.addEventListener('submit', async function(e) {
@@ -428,65 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error adding blog post:', error);
                 showMessage('Failed to add blog post. See console for details.', 'error');
             }
-        });
-    }
-
-    // --- Form Submission Logic for Edit Forms (NEW) ---
-    const editProjectForm = document.getElementById('edit-project-form');
-    if (editProjectForm) {
-        editProjectForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-project-id').value;
-            const updatedData = {
-                title: document.getElementById('edit-project-title').value,
-                description: document.getElementById('edit-project-description').value,
-                imageUrl: document.getElementById('edit-project-image').value
-            };
-            updateItem('/api/projects', id, updatedData, () => {
-                document.getElementById('edit-project-modal').classList.add('hidden');
-                document.getElementById('edit-project-modal').classList.remove('flex');
-                renderCollection('/api/projects', 'projects-container', 'admin-project-list', renderProject);
-            });
-        });
-    }
-    const editBlogForm = document.getElementById('edit-blog-form');
-    if (editBlogForm) {
-        editBlogForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-blog-id').value;
-            const updatedData = {
-                title: document.getElementById('edit-blog-title').value,
-                date: document.getElementById('edit-blog-date').value,
-                category: document.getElementById('edit-blog-category').value,
-                excerpt: document.getElementById('edit-blog-excerpt').value,
-                imageUrl: document.getElementById('edit-blog-image').value,
-                link: document.getElementById('edit-blog-link').value
-            };
-            updateItem('/api/blogs', id, updatedData, () => {
-                document.getElementById('edit-blog-modal').classList.add('hidden');
-                document.getElementById('edit-blog-modal').classList.remove('flex');
-                renderCollection('/api/blogs', 'blog-posts-container', 'admin-blog-list', renderBlog);
-            });
-        });
-    }
-    const editTeamForm = document.getElementById('edit-team-form');
-    if (editTeamForm) {
-        editTeamForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-team-id').value;
-            const updatedData = {
-                name: document.getElementById('edit-team-name').value,
-                title: document.getElementById('edit-team-title').value,
-                imageUrl: document.getElementById('edit-team-image').value,
-                githubUrl: document.getElementById('edit-team-github').value,
-                linkedinUrl: document.getElementById('edit-team-linkedin').value,
-                twitterUrl: document.getElementById('edit-team-twitter').value
-            };
-            updateItem('/api/team', id, updatedData, () => {
-                document.getElementById('edit-team-modal').classList.add('hidden');
-                document.getElementById('edit-team-modal').classList.remove('flex');
-                renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember);
-            });
         });
     }
 });
