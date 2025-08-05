@@ -1,788 +1,415 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediSec - Protecting Healthcare Technology</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="https://raw.githubusercontent.com/manvi541/website/refs/heads/main/Cyberhealth__1_-removebg-preview.png" type="image/x-icon">
-    <link rel="stylesheet" href="style.css">
+    <title>Business Landing Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Ensure HTML and Body take full screen and remove default margins/padding */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden; /* Keep this to prevent horizontal scroll */
+        .nav-link.active {
+            color: #00acc1;
         }
 
-        /* Custom CSS for elements that need more styling */
-        .hero-gradient {
-            /* Updated gradient using your theme colors */
-            background: linear-gradient(135deg, #00acc1 0%, #7a97ab 100%);
+        .animate-slide-up {
+            animation: slide-up 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
         }
+
+        @keyframes slide-up {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-zoom-in {
+            animation: zoom-in 0.8s ease-out forwards;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        @keyframes zoom-in {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         .card-hover:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .nav-link {
-            position: relative;
+
+        .card-hover {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
-        .nav-link:after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            /* Updated link underline color */
-            background-color: #00acc1;
-            transition: width 0.3s ease;
+
+        .team-card {
+            transition: transform 0.3s ease-in-out;
         }
-        .nav-link:hover:after {
-            width: 100%;
+
+        .team-card:hover {
+            transform: scale(1.05);
         }
-        .active:after {
-            width: 100%;
-        }
-        .form-input:focus {
-            outline: none;
-            /* Updated focus border color */
-            box-shadow: 0 0 0 3px rgba(0, 172, 193, 0.5);
-        }
-        /* Admin Panel styles */
-        #admin-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            /* Updated admin toggle background */
-            background-color: #00acc1;
-            color: white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 1000;
-            transition: background-color 0.3s;
-        }
-        #admin-toggle:hover {
-            /* Updated admin toggle hover background */
-            background-color: #7a97ab;
-        }
+
         #admin-panel {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 350px;
-            height: 100%;
-            background-color: white;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-            z-index: 1001;
-            display: none; /* Hidden by default */
-            overflow-y: auto;
-            padding: 20px;
-            transition: transform 0.3s ease-out;
-            transform: translateX(100%);
+            right: -20rem; /* Off-screen by default */
+            transition: right 0.3s ease-in-out;
         }
+
         #admin-panel.open {
-            transform: translateX(0);
-            display: block; /* Show when open */
-        }
-        #close-admin {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-        #close-admin:hover {
-            color: #1f2937;
-        }
-        .admin-section {
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .admin-section:last-child {
-            border-bottom: none;
-        }
-        .admin-label {
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 8px;
-            display: block;
-        }
-        .admin-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            font-size: 0.9rem;
-        }
-        .admin-button {
-            /* Updated admin button background */
-            background-color: #00acc1;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 66px;
-            cursor: pointer;
-            border: none;
-            font-size: 0.9rem;
-            transition: background-color 0.3s;
-        }
-        .admin-button:hover {
-            /* Updated admin button hover background */
-            background-color: #7a97ab;
-        }
-        .admin-list-item {
-            background-color: #f3f4f6;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .admin-list-item button {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        .admin-list-item button:hover {
-            color: #dc2626;
+            right: 0; /* Slide in */
         }
     </style>
 </head>
-<body class="font-sans bg-gray-50">
+<body class="bg-gray-50 text-gray-800 font-sans">
 
-    <nav class="bg-[#890909] shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <img src="https://raw.githubusercontent.com/manvi541/website/refs/heads/main/Cyberhealth__1_-removebg-preview.png" alt="MediSec Logo" style="height: 40px; margin-right: 8px;">
-                        <span class="text-xl font-bold text-white">MediSec</span>
-                    </div>
-                </div>
-                <div class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
-                    <a href="#home" class="nav-link text-white px-3 py-2 text-sm font-medium">Home</a>
-                    <a href="#mission" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Mission</a>
-                    <a href="#projects" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Projects/Blogs</a>
-                    <a href="#team" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Team</a>
-                    <a href="#instagram-feed" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Instagram</a>
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Make a Chapter</a>
-                    <a href="#join" class="bg-[#00acc1] hover:bg-[#7a97ab] text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300 pulse">Join Us</a>
-                </div>
-                <div class="-mr-2 flex items-center md:hidden">
-                    <button type="button" id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00acc1]">
-                        <span class="sr-only">Open main menu</span>
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
+    <header class="bg-white shadow-sm fixed w-full z-40 transition-all duration-300 ease-in-out">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-[#00acc1]">YourBrand</a>
+            
+            <ul class="hidden md:flex space-x-6 text-gray-600 font-medium">
+                <li><a href="#hero" class="nav-link hover:text-[#00acc1] transition-colors">Home</a></li>
+                <li><a href="#about" class="nav-link hover:text-[#00acc1] transition-colors">About Us</a></li>
+                <li><a href="#services" class="nav-link hover:text-[#00acc1] transition-colors">Services</a></li>
+                <li><a href="#projects" class="nav-link hover:text-[#00acc1] transition-colors">Projects</a></li>
+                <li><a href="#blog" class="nav-link hover:text-[#00acc1] transition-colors">Blog</a></li>
+                <li><a href="#team" class="nav-link hover:text-[#00acc1] transition-colors">Team</a></li>
+                <li><a href="#contact" class="nav-link hover:text-[#00acc1] transition-colors">Contact</a></li>
+            </ul>
 
-        <div class="hidden md:hidden" id="mobile-menu">
-            <div class="pt-2 pb-3 space-y-1">
-                <a href="#home" class="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-800 hover:bg-gray-50">Home</a>
-                <a href="#mission" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Mission</a>
-                <a href="#projects" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Blogs</a>
-                <a href="#team" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Team</a>
-                <a href="#instagram-feed" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Instagram</a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Make a Chapter</a>
-                <a href="#join" class="block px-3 py-2 text-base font-medium text-[#00acc1] hover:text-[#9ad8fa] hover:bg-blue-50">Join Us</a>
-            </div>
-        </div>
-    </nav>
+            <button id="mobile-menu-button" class="md:hidden text-gray-600 hover:text-[#00acc1] focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </nav>
+    </header>
 
-    <section id="home" class="relative text-white py-20 md:py-32 animate-fade-in bg-blue-500">
-        <div class="absolute inset-0 bg-blue-100">
-            <img src="https://www.securitymagazine.com/ext/resources/images/healthcare-freepik1170x658v57.jpg?1658154933" alt="Healthcare Security" class="w-full h-full object-cover opacity-25">
+    <div id="mobile-menu" class="hidden md:hidden fixed top-0 left-0 w-full h-full bg-white z-30 pt-20">
+        <ul class="flex flex-col items-center space-y-6 text-xl text-gray-800 font-medium">
+            <li><a href="#hero" class="nav-link hover:text-[#00acc1] transition-colors">Home</a></li>
+            <li><a href="#about" class="nav-link hover:text-[#00acc1] transition-colors">About Us</a></li>
+            <li><a href="#services" class="nav-link hover:text-[#00acc1] transition-colors">Services</a></li>
+            <li><a href="#projects" class="nav-link hover:text-[#00acc1] transition-colors">Projects</a></li>
+            <li><a href="#blog" class="nav-link hover:text-[#00acc1] transition-colors">Blog</a></li>
+            <li><a href="#team" class="nav-link hover:text-[#00acc1] transition-colors">Team</a></li>
+            <li><a href="#contact" class="nav-link hover:text-[#00acc1] transition-colors">Contact</a></li>
+        </ul>
+    </div>
+
+    <section id="hero" class="relative bg-cover bg-center h-screen flex items-center" style="background-image: url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1470&auto=format&fit=crop');">
+        <div class="absolute inset-0 bg-black opacity-60"></div>
+        <div class="container mx-auto px-4 z-10 text-white text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold leading-tight animate-slide-up" style="animation-delay: 0.1s;">
+                Innovate Your Business <br> with Our Solutions
+            </h1>
+            <p class="mt-4 text-lg md:text-xl font-light max-w-2xl mx-auto animate-slide-up" style="animation-delay: 0.3s;">
+                We are a team of passionate creators, dedicated to building stunning and user-friendly web experiences.
+            </p>
+            <a href="#contact" class="mt-8 inline-block px-8 py-3 bg-[#00acc1] text-white font-bold rounded-full shadow-lg hover:bg-opacity-90 transition-all transform hover:scale-105 animate-slide-up" style="animation-delay: 0.5s;">
+                Get Started
+            </a>
         </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center lg:text-left">
-            <div class="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
-                <div class="mb-12 lg:mb-0">
-                    <h1 class="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg animate-slide-up hero-title-shadow" style="animation-delay: 0.3s">Welcome to MediSec</h1>
-                    <p class="text-xl mb-8 opacity-90 animate-slide-up" style="animation-delay: 0.6s">MediSec empowers innovation and creativity through cutting-edge solutions and collaborative initiatives.</p>
-                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start">
-                        <a href="#join" class="bg-white text-[#00acc1] hover:bg-gray-100 px-6 py-3 rounded-md text-lg font-semibold text-center transition duration-300 pulse">Join Our Initiative</a>
-                        <a href="#mission" class="border-2 border-white hover:bg-white hover:text-[#00acc1] px-6 py-3 rounded-md text-lg font-semibold text-center transition duration-300">Learn More</a>
-                    </div>
+    </section>
+
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">About Our Company</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">
+                We are a dynamic and innovative company specializing in creating bespoke digital solutions. Our mission is to help businesses thrive in the digital age by providing expert services in web development, design, and digital strategy.
+            </p>
+            <div class="mt-12 grid md:grid-cols-3 gap-8">
+                <div class="p-6 bg-gray-100 rounded-lg shadow-md animate-slide-up" style="animation-delay: 0.2s;">
+                    <i class="fas fa-eye text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Our Vision</h3>
+                    <p class="text-gray-600">To be a leader in digital innovation, empowering businesses to reach their full potential.</p>
                 </div>
-                <div class="relative hidden lg:block animate-zoom-in" style="animation-delay: 0.9s">
-                    <div class="bg-[#00acc1] rounded-lg shadow-lg p-4 inline-block">
-                        <p class="text-white font-medium">Innovating for a healthier, safer tomorrow</p>
-                    </div>
+                <div class="p-6 bg-gray-100 rounded-lg shadow-md animate-slide-up" style="animation-delay: 0.4s;">
+                    <i class="fas fa-rocket text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Our Mission</h3>
+                    <p class="text-gray-600">To deliver high-quality, creative, and effective digital solutions that drive growth and success.</p>
+                </div>
+                <div class="p-6 bg-gray-100 rounded-lg shadow-md animate-slide-up" style="animation-delay: 0.6s;">
+                    <i class="fas fa-users text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Our Team</h3>
+                    <p class="text-gray-600">A diverse group of experts, united by a passion for technology and a commitment to excellence.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="bg-white py-12 border-t-2 border-[#00acc1]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm stat-animate" style="animation-delay: 0.2s">
-                    <div class="text-[#00acc1] text-4xl font-bold mb-2" id="stat1">93%</div>
-                    <div class="text-gray-600">of healthcare organizations experienced a data breach in the past 3 years</div>
+    <section id="services" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">Our Services</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">
+                We offer a wide range of services to help you achieve your business goals, from stunning web design to robust e-commerce solutions.
+            </p>
+            <div class="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="p-6 bg-white rounded-lg shadow-md card-hover animate-slide-up" style="animation-delay: 0.2s;">
+                    <i class="fas fa-laptop-code text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Web Development</h3>
+                    <p class="text-gray-600">Building custom, responsive, and high-performance websites tailored to your needs.</p>
                 </div>
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm stat-animate" style="animation-delay: 0.4s">
-                    <div class="text-[#00acc1] text-4xl font-bold mb-2" id="stat2">$10M+</div>
-                    <div class="text-gray-600">average cost of a healthcare data breach</div>
+                <div class="p-6 bg-white rounded-lg shadow-md card-hover animate-slide-up" style="animation-delay: 0.4s;">
+                    <i class="fas fa-palette text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">UI/UX Design</h3>
+                    <p class="text-gray-600">Crafting intuitive and visually appealing user interfaces for an exceptional user experience.</p>
                 </div>
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm stat-animate" style="animation-delay: 0.6s">
-                    <div class="text-[#00acc1] text-4xl font-bold mb-2" id="stat3">300%</div>
-                    <div class="text-gray-600">increase in cyberattacks on healthcare since 2020</div>
+                <div class="p-6 bg-white rounded-lg shadow-md card-hover animate-slide-up" style="animation-delay: 0.6s;">
+                    <i class="fas fa-shopping-cart text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">E-commerce Solutions</h3>
+                    <p class="text-gray-600">Creating powerful and secure online stores to boost your sales and reach.</p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="mission" class="py-20 bg-gray-50 animate-fade-in border-t-2 border-[#00acc1]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Our Mission</h2>
-                <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 animate-slide-right" style="animation-delay: 0.3s">Empowering healthcare technology against cyber threats</h3>
-                    <p class="text-gray-600 mb-6">MediSec is a nonprofit initiative dedicated to bridging the knowledge gap in healthcare cybersecurity. We believe that education and collaboration are the keys to protecting sensitive patient data and critical medical infrastructure. We focus on spreading vital information about cyber vulnerabilities and the potential for data breaches that can occur in healthcare systems, ensuring students and professionals are well-equipped to defend against these threats.</p>
-
-                    <div class="space-y-6">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-[#9ad8fa] text-[#00acc1]">
-                                    <i class="fas fa-graduation-cap"></i>
-                                </div>
-                            </div>
-                            <div class="ml-4">
-                                <h4 class="text-lg font-medium text-gray-900">Workshops & Training</h4>
-                                <p class="mt-1 text-gray-600">Hands-on sessions to build practical cybersecurity skills for healthcare environments.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-[#9ad8fa] text-[#00acc1]">
-                                    <i class="fas fa-microscope"></i>
-                                </div>
-                            </div>
-                            <div class="ml-4">
-                                <h4 class="text-lg font-medium text-gray-900">Research & Publications</h4>
-                                <p class="mt-1 text-gray-600">Supporting students in conducting and disseminating cybersecurity research.</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="p-6 bg-white rounded-lg shadow-md card-hover animate-slide-up" style="animation-delay: 0.8s;">
+                    <i class="fas fa-chart-line text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Digital Marketing</h3>
+                    <p class="text-gray-600">Developing data-driven strategies to increase your online presence and customer engagement.</p>
                 </div>
-
-                <div class="bg-white p-8 rounded-lg shadow-lg animate-slide-left" style="animation-delay: 0.6s">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">Our Core Values</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-[#9ad8fa] flex items-center justify-center text-[#00acc1]">
-                                <i class="fas fa-heart"></i>
-                            </div>
-                            <div class="ml-4">
-                                <h4 class="text-lg font-medium text-gray-900">Patient-Centered Security</h4>
-                                <p class="mt-1 text-gray-600">All our efforts ultimately serve to protect patient wellbeing and privacy.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-[#9ad8fa] flex items-center justify-center text-[#00acc1]">
-                                <i class="fas fa-lightbulb"></i>
-                            </div>
-                            <div class="ml-4">
-                                <h4 class="text-lg font-medium text-gray-900">Knowledge Sharing</h4>
-                                <p class="mt-1 text-gray-600">We believe cybersecurity knowledge should be accessible to all in the healthcare field.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-[#9ad8fa] flex items-center justify-center text-[#00acc1]">
-                                <i class="fas fa-handshake"></i>
-                            </div>
-                            <div class="ml-4">
-                                <h4 class="text-lg font-medium text-gray-900">Strategic Partnerships</h4>
-                                <p class="mt-1 text-gray-600">We collaborate to develop comprehensive security solutions.</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="p-6 bg-white rounded-lg shadow-md card-hover animate-slide-up" style="animation-delay: 1.0s;">
+                    <i class="fas fa-mobile-alt text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Mobile App Development</h3>
+                    <p class="text-gray-600">Designing and building native and cross-platform mobile applications for iOS and Android.</p>
+                </div>
+                <div class="p-6 bg-white rounded-lg shadow-md card-hover animate-slide-up" style="animation-delay: 1.2s;">
+                    <i class="fas fa-cloud text-4xl text-[#00acc1] mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Cloud Services</h3>
+                    <p class="text-gray-600">Providing scalable and secure cloud infrastructure and management solutions.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="projects" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Projects & Blogs</h2>
-                <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
-                <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">Explore our latest cybersecurity projects and blog posts</p>
-            </div>
+    <section id="projects" class="py-20 bg-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">Our Latest Projects</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">
+                Explore a showcase of our recent work, highlighting our expertise in creating impactful digital experiences.
+            </p>
+            <div id="projects-container" class="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+        </div>
+    </section>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12" id="projects-container">
-                <p class="col-span-full text-center text-gray-500">Loading projects...</p>
-            </div>
+    <section id="blog" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">Our Blog</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">
+                Stay updated with our latest insights, news, and articles on web development, design, and technology.
+            </p>
+            <div id="blog-posts-container" class="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+        </div>
+    </section>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12" id="blog-posts-container">
-                <p class="col-span-full text-center text-gray-500">Loading blog posts...</p>
-            </div>
+    <section id="team" class="py-20 bg-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">Meet Our Team</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">
+                We are a group of dedicated professionals with diverse skills and a shared passion for building exceptional products.
+            </p>
+            <div id="team-container" class="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                </div>
+        </div>
+    </section>
 
-
-            <div class="bg-gray-50 p-8 rounded-lg shadow-md max-w-2xl mx-auto">
-                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Upload Your Project</h3>
-                <form id="project-upload-form" class="space-y-4">
+    <section id="contact" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">Contact Us</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">
+                Have a project in mind or just want to say hello? Fill out the form below or reach out to us directly.
+            </p>
+            <div class="mt-12 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+                <form id="contact-form" class="space-y-4">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="project-title">
-                            Project Title
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md"
-                               id="project-title" type="text" required>
+                        <input type="text" id="name" name="name" placeholder="Your Name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#00acc1]">
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="project-description">
-                            Description
-                        </label>
-                        <textarea class="form-input w-full px-3 py-2 border border-gray-300 rounded-md"
-                                 id="project-description" rows="3" required></textarea>
+                        <input type="email" id="email" name="email" placeholder="Your Email" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#00acc1]">
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="project-image">
-                            Cover Image URL
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="project-image" type="url" placeholder="https://example.com/image.jpg">
+                        <textarea id="message" name="message" rows="4" placeholder="Your Message" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#00acc1]"></textarea>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="project-link">
-                            Project File (Upload)
-                        </label>
-                        <input class="w-full" id="project-link" type="file" accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
-                    </div>
-                    <button type="submit" class="w-full bg-[#00acc1] hover:bg-[#7a97ab] text-white font-bold py-2 px-4 rounded transition duration-300">
-                        Upload Project
+                    <button type="submit" class="w-full bg-[#00acc1] text-white font-bold py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors">
+                        Send Message
                     </button>
                 </form>
             </div>
-
-            <div id="edit-project-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-900" id="project-modal-title">Edit Project</h3>
-                        <button id="close-edit-project-modal" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <form id="edit-project-form">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-project-title">
-                                Project Title
-                            </label>
-                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-project-title" type="text" required>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-project-description">
-                                Description
-                            </label>
-                            <textarea class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-project-description" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-project-image">
-                                Cover Image URL
-                            </label>
-                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-project-image" type="url" placeholder="https://example.com/image.jpg">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-project-link">
-                                Project File (Upload)
-                            </label>
-                            <input class="w-full" id="modal-project-link" type="file" accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
-                        </div>
-                        <div class="flex justify-between">
-                            <button type="button" id="delete-project-modal-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 hidden">
-                                Delete Project
-                            </button>
-                            <div>
-                                <button type="button" id="cancel-project-modal-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 mr-2">
-                                    Cancel
-                                </button>
-                                <button type="submit" class="bg-[#00acc1] hover:bg-[#7a97ab] text-white font-bold py-2 px-4 rounded transition duration-300">
-                                    Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
     </section>
 
-    <section id="instagram-feed" class="py-20 bg-gray-50 animate-fade-in border-t-2 border-[#00acc1]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Latest from Instagram</h2>
-                <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
-                <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">Follow us for more updates and insights!</p>
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-6 mb-4">
+                <a href="#" class="text-xl hover:text-[#00acc1] transition-colors"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-xl hover:text-[#00acc1] transition-colors"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-xl hover:text-[#00acc1] transition-colors"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="text-xl hover:text-[#00acc1] transition-colors"><i class="fab fa-instagram"></i></a>
             </div>
-
-            <div class="instagram-embed-container">
-                <script src="https://static.elfsight.com/platform/platform.js" async></script>
-                <div class="elfsight-app-9689fcdd-b5ea-4fa2-9a81-8eb3790504fc" data-elfsight-app-lazy></div>
-            </div>
-
-            <div class="mt-12 text-center">
-                <a href="https://www.instagram.com/medi_sec/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
-                    <i class="fab fa-instagram mr-2"></i> Follow Us on Instagram
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section id="team" class="py-20 bg-gray-50 animate-fade-in border-t-2 border-[#00acc1]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 animate-pulse-slow section-title-shadow">Our Team</h2>
-                <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
-                <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">Our dedicated team will be revealed soon!</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="team-container">
-                <p class="col-span-full text-center text-gray-500">No team members added yet. Click "Add Team Member" to get started!</p>
-            </div>
-
-            <div class="mt-12 text-center">
-                <p class="text-gray-600 mb-6">We're building a passionate group of professionals and students. Stay tuned for our full team announcement!</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
-                        Meet Our Full Team
-                        <i class="fas fa-users ml-2"></i>
-                    </a>
-                    <button id="add-edit-team-btn" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#7a97ab] hover:bg-[#00acc1] transition duration-300">
-                        <i class="fas fa-plus mr-2"></i> Add/Edit Team Members
-                    </button>
-                </div>
-            </div>
-
-            <div id="edit-team-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-900" id="team-modal-title">Edit Team Member</h3>
-                        <button id="close-edit-team-modal" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <form id="edit-team-form">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="member-name">
-                                    Name
-                                </label>
-                                <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-name" type="text" required>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="member-title">
-                                    Title
-                                </label>
-                                <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-title" type="text" required>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="member-bio">
-                                Bio
-                            </label>
-                            <textarea class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-bio" rows="3"></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="member-image">
-                                Profile Image URL
-                            </label>
-                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-image" type="url" placeholder="https://example.com/profile.jpg">
-                        </div>
-                        <div class="flex justify-between">
-                            <button type="button" id="delete-member-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 hidden">
-                                Delete Member
-                            </button>
-                            <div>
-                                <button type="button" id="cancel-edit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 mr-2">
-                                    Cancel
-                                </button>
-                                <button type="submit" class="bg-[#00acc1] hover:bg-[#7a97ab] text-white font-bold py-2 px-4 rounded transition duration-300">
-                                    Save Member
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="join" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:grid lg:grid-cols-2 lg:gap-12 items-center">
-                <div class="mb-12 lg:mb-0">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 section-title-shadow">Join the MediSec Initiative</h2>
-                    <p class="text-gray-600 mb-6">Whether you're a high school student, college student, healthcare professional, or cybersecurity expert, there are many ways to get involved with our mission to secure healthcare technology.</p>
-
-                    <div class="bg-[#9ad8fa] p-6 rounded-lg mb-8">
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Why Join MediSec?</h3>
-                        <ul class="space-y-3">
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-[#00acc1] mt-1 mr-2"></i>
-                                <span class="text-gray-700">Gain valuable skills in the high-demand field of healthcare cybersecurity.</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-[#00acc1] mt-1 mr-2"></i>
-                                <span class="text-gray-700">For High School Students: Build a strong resume for college applications, gain practical experience, and explore a potential career path.</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-[#00acc1] mt-1 mr-2"></i>
-                                <span class="text-gray-700">For College Students: Enhance your academic profile, find internship opportunities, and network with industry professionals.</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-[#00acc1] mt-1 mr-2"></i>
-                                <span class="text-gray-700">Contribute to meaningful initiatives that protect patient data and critical infrastructure.</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-[#00acc1] mt-1 mr-2"></i>
-                                <span class="text-gray-700">Access exclusive training, workshops, and research opportunities.</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Ways to Get Involved</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-gray-900 mb-2"><i class="fas fa-user-graduate text-[#00acc1] mr-2"></i> Student Member & Volunteer</h4>
-                                <p class="mt-1 text-gray-600 text-sm">Join our student programs and projects. <a href="https://docs.google.com/forms/d/e/1FAIpQLSdd1hxEG79-HGxaqCG7_z3yu779abh2kEtcMeUsDleeCGst0g/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Apply Here</a></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-[#00acc1] mb-2"><i class="fas fa-hands-helping text-[#00acc1] mr-2"></i> Make a Chapter</h4>
-                                <p class="mt-1 text-gray-600 text-sm">Start a MediSec chapter in your area. <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Apply Here</a></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-gray-900 mb-2"><i class="fas fa-hand-holding-heart text-[#00acc1] mr-2"></i> Donor</h4>
-                                <p class="mt-1 text-gray-600 text-sm">Support our mission with a financial contribution. <a href="https://hcb.hackclub.com/donations/start/medisec" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Donate Here</a></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-gray-900 mb-2"><i class="fas fa-briefcase text-[#00acc1] mr-2"></i> Partner</h4>
-                                <p class="mt-1 text-gray-600 text-sm">Collaborate with us on healthcare security initiatives.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 p-8 rounded-lg shadow-lg">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Get in Touch</h3>
-                    <form action="mailto:medisecproject@gmail.com" method="post" enctype="text/plain" class="space-y-4">
-                        <div>
-                            <label for="name" class="sr-only">Name</label>
-                            <input type="text" id="name" name="name" placeholder="Your Name"
-                                   class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-[#00acc1] focus:border-[#00acc1]" required>
-                        </div>
-                        <div>
-                            <label for="email" class="sr-only">Email</label>
-                            <input type="email" id="email" name="email" placeholder="Your Email"
-                                   class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-[#00acc1] focus:border-[#00acc1]" required>
-                        </div>
-                        <div>
-                            <label for="message" class="sr-only">Message</label>
-                            <textarea id="message" name="message" rows="5" placeholder="Your Message"
-                                     class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-[#00acc1] focus:border-[#00acc1]" required></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-[#00acc1] hover:bg-[#7a97ab] text-white font-bold py-3 px-6 rounded-md text-lg transition duration-300">
-                            Send Message
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="bg-gray-800 text-white py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-            <div class="mb-4 md:mb-0">
-                <p>&copy; 2024 MediSec. All rights reserved.</p>
-            </div>
-            <div class="flex space-x-6">
-                <a href="https://twitter.com/medi_sec" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-white transition duration-300">
-                    <i class="fab fa-twitter text-2xl"></i>
-                </a>
-                <a href="https://instagram.com/medi_sec" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-white transition duration-300">
-                    <i class="fab fa-instagram text-2xl"></i>
-                </a>
-                <a href="https://linkedin.com/company/medi-sec" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-white transition duration-300">
-                    <i class="fab fa-linkedin-in text-2xl"></i>
-                </a>
-            </div>
+            <p class="text-sm text-gray-400">&copy; 2024 YourBrand. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <div id="admin-toggle" class="cursor-pointer">
-        <i class="fas fa-cog"></i>
-    </div>
+    <button id="admin-toggle" class="fixed bottom-4 right-4 p-4 rounded-full bg-[#00acc1] text-white shadow-lg z-50 hover:bg-opacity-90 transition-colors">
+        <i class="fas fa-cog text-xl"></i>
+    </button>
 
-    <div id="admin-panel">
-        <button id="close-admin"><i class="fas fa-times"></i></button>
-        <h2 class="text-2xl font-bold mb-6 text-gray-800">Admin Panel</h2>
-
-        <div class="admin-section">
-            <h3 class="text-xl font-semibold mb-4">Add New Blog Post (News & Insights)</h3>
-            <form id="blog-upload-form">
-                <label for="blog-title" class="admin-label">Title:</label>
-                <input type="text" id="blog-title" class="admin-input" placeholder="Blog Post Title" required>
-
-                <label for="blog-date" class="admin-label">Date:</label>
-                <input type="date" id="blog-date" class="admin-input" required>
-
-                <label for="blog-category" class="admin-label">Category:</label>
-                <input type="text" id="blog-category" class="admin-input" placeholder="e.g., Event, Announcement" required>
-
-                <label for="blog-excerpt" class="admin-label">Excerpt:</label>
-                <textarea id="blog-excerpt" class="admin-input" rows="3" placeholder="A brief summary of the blog post..." required></textarea>
-
-                <label for="blog-image" class="admin-label">Image URL (Optional):</label>
-                <input type="url" id="blog-image" class="admin-input" placeholder="https://example.com/image.jpg">
-
-                <label for="blog-link" class="admin-label">Full Article Link (Optional):</label>
-                <input type="url" id="blog-link" class="admin-input" placeholder="https://example.com/article">
-
-                <button type="submit" class="admin-button w-full">Add Blog Post</button>
-            </form>
+    <div id="admin-panel" class="fixed top-0 right-0 h-full w-80 bg-gray-900 text-white z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto p-4">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">Admin Panel</h3>
+            <button id="close-admin" class="text-white hover:text-gray-400 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
 
-        <div class="admin-section">
-            <h3 class="text-xl font-semibold mb-4">Current Blog Posts</h3>
-            <div id="admin-blog-list">
-                </div>
-        </div>
-
-        <div id="edit-blog-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-            <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-900" id="blog-modal-title">Edit Blog Post</h3>
-                    <button id="close-edit-blog-modal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="edit-blog-form">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-blog-title">
-                            Title
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-blog-title" type="text" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-blog-date">
-                            Date
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-blog-date" type="date" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-blog-category">
-                            Category
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-blog-category" type="text" placeholder="e.g., Event, Announcement" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-blog-excerpt">
-                            Excerpt
-                        </label>
-                        <textarea class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-blog-excerpt" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-blog-image">
-                            Image URL (Optional)
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-blog-image" type="url" placeholder="https://example.com/image.jpg">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-blog-link">
-                            Full Article Link (Optional)
-                        </label>
-                        <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="modal-blog-link" type="url" placeholder="https://example.com/article">
-                    </div>
-                    <div class="flex justify-between">
-                        <button type="button" id="delete-blog-modal-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 hidden">
-                            Delete Blog Post
-                        </button>
-                        <div>
-                            <button type="button" id="cancel-blog-modal-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 mr-2">
-                                Cancel
-                            </button>
-                            <button type="submit" class="bg-[#00acc1] hover:bg-[#7a97ab] text-white font-bold py-2 px-4 rounded transition duration-300">
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <div class="mb-8">
+            <h4 class="text-xl font-semibold mb-4">Projects</h4>
+            <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                <h5 class="text-lg font-medium mb-2">Add New Project</h5>
+                <form id="project-upload-form" class="space-y-2">
+                    <input type="text" id="project-title" placeholder="Project Title" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <textarea id="project-description" placeholder="Description" rows="2" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none"></textarea>
+                    <input type="text" id="project-image" placeholder="Image URL" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <input type="text" id="project-link" placeholder="Project URL" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <button type="submit" class="w-full bg-[#00acc1] py-2 rounded-md font-bold hover:bg-opacity-80 transition-colors">Add Project</button>
+                </form>
             </div>
-        </div>
-
-        <div class="admin-section">
-            <h3 class="text-xl font-semibold mb-4">Add New Project</h3>
-            <form id="project-upload-form">
-                <label for="project-title" class="admin-label">Project Title:</label>
-                <input type="text" id="project-title" class="admin-input" placeholder="Project Title" required>
-
-                <label for="project-description" class="admin-label">Description:</label>
-                <textarea id="project-description" class="admin-input" rows="3" placeholder="A brief description of the project..." required></textarea>
-
-                <label for="project-image" class="admin-label">Cover Image URL:</label>
-                <input type="url" id="project-image" class="admin-input" placeholder="https://example.com/image.jpg">
-
-                <label for="project-link" class="admin-label">Project File (Upload):</label>
-                <input type="file" id="project-link" class="admin-input" accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
-
-                <button type="submit" class="admin-button w-full">Add Project</button>
-            </form>
-        </div>
-
-        <div class="admin-section">
-            <h3 class="text-xl font-semibold mb-4">Current Projects</h3>
             <div id="admin-project-list">
                 </div>
         </div>
 
-        <div class="admin-section">
-            <h3 class="text-xl font-semibold mb-4">Add New Team Member</h3>
-            <form id="add-team-member-form"> <label for="new-member-name" class="admin-label">Full Name:</label>
-                <input type="text" id="new-member-name" class="admin-input" placeholder="John Doe" required>
-
-                <label for="new-member-title" class="admin-label">Title:</label>
-                <input type="text" id="new-member-title" class="admin-input" placeholder="e.g., Lead Developer" required>
-
-                <label for="new-member-bio" class="admin-label">Bio:</label>
-                <textarea id="new-member-bio" class="admin-input" rows="3" placeholder="A short bio about the team member..."></textarea>
-
-                <label for="new-member-image" class="admin-label">Profile Image URL:</label>
-                <input type="url" id="new-member-image" class="admin-input" placeholder="https://example.com/profile.jpg">
-
-                <button type="submit" class="admin-button w-full">Add Team Member</button>
-            </form>
+        <div class="mb-8">
+            <h4 class="text-xl font-semibold mb-4">Blog Posts</h4>
+            <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                <h5 class="text-lg font-medium mb-2">Add New Blog Post</h5>
+                <form id="blog-upload-form" class="space-y-2">
+                    <input type="text" id="blog-title" placeholder="Blog Title" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <input type="text" id="blog-date" placeholder="Date (e.g., May 20, 2024)" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <input type="text" id="blog-category" placeholder="Category" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <textarea id="blog-excerpt" placeholder="Excerpt" rows="2" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none"></textarea>
+                    <input type="text" id="blog-image" placeholder="Image URL" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <input type="text" id="blog-link" placeholder="Read More URL" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <button type="submit" class="w-full bg-[#00acc1] py-2 rounded-md font-bold hover:bg-opacity-80 transition-colors">Add Post</button>
+                </form>
+            </div>
+            <div id="admin-blog-list">
+                </div>
         </div>
 
-        <div class="admin-section">
-            <h3 class="text-xl font-semibold mb-4">Current Team Members</h3>
+        <div class="mb-8">
+            <h4 class="text-xl font-semibold mb-4">Team Members</h4>
+            <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                <h5 class="text-lg font-medium mb-2">Add New Team Member</h5>
+                <form id="add-team-member-form" class="space-y-2">
+                    <input type="text" id="new-member-name" placeholder="Name" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <input type="text" id="new-member-title" placeholder="Title/Role" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <textarea id="new-member-bio" placeholder="Bio" rows="2" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none"></textarea>
+                    <input type="text" id="new-member-image" placeholder="Image URL" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none">
+                    <button type="submit" class="w-full bg-[#00acc1] py-2 rounded-md font-bold hover:bg-opacity-80 transition-colors">Add Member</button>
+                </form>
+            </div>
             <div id="admin-team-list">
                 </div>
         </div>
     </div>
+    
+    <div id="edit-project-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-2xl font-bold">Edit Project</h4>
+                <button id="close-edit-project-modal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-project-form" class="space-y-4">
+                <div>
+                    <label for="modal-project-title" class="block text-sm font-medium text-gray-700">Project Title</label>
+                    <input type="text" id="modal-project-title" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="modal-project-description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="modal-project-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]"></textarea>
+                </div>
+                <div>
+                    <label for="modal-project-image" class="block text-sm font-medium text-gray-700">Image URL</label>
+                    <input type="text" id="modal-project-image" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancel-project-modal-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#00acc1] rounded-md hover:bg-opacity-90">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="edit-blog-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-2xl font-bold">Edit Blog Post</h4>
+                <button id="close-edit-blog-modal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-blog-form" class="space-y-4">
+                <div>
+                    <label for="modal-blog-title" class="block text-sm font-medium text-gray-700">Blog Title</label>
+                    <input type="text" id="modal-blog-title" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="modal-blog-date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="text" id="modal-blog-date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="modal-blog-category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <input type="text" id="modal-blog-category" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="modal-blog-excerpt" class="block text-sm font-medium text-gray-700">Excerpt</label>
+                    <textarea id="modal-blog-excerpt" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]"></textarea>
+                </div>
+                <div>
+                    <label for="modal-blog-image" class="block text-sm font-medium text-gray-700">Image URL</label>
+                    <input type="text" id="modal-blog-image" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="modal-blog-link" class="block text-sm font-medium text-gray-700">Read More URL</label>
+                    <input type="text" id="modal-blog-link" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancel-blog-modal-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#00acc1] rounded-md hover:bg-opacity-90">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="edit-team-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-2xl font-bold">Edit Team Member</h4>
+                <button id="close-edit-team-modal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-team-form" class="space-y-4">
+                <div>
+                    <label for="member-name" class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" id="member-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="member-title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="member-title" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div>
+                    <label for="member-bio" class="block text-sm font-medium text-gray-700">Bio</label>
+                    <textarea id="member-bio" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]"></textarea>
+                </div>
+                <div>
+                    <label for="member-image" class="block text-sm font-medium text-gray-700">Image URL</label>
+                    <input type="text" id="member-image" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00acc1] focus:border-[#00acc1]">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancel-edit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#00acc1] rounded-md hover:bg-opacity-90">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
 </body>
