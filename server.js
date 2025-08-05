@@ -63,6 +63,8 @@ app.post('/api/projects', async (req, res) => {
         if (!newProject.title || !newProject.description) {
             return res.status(400).json({ message: 'Title and description are required.' });
         }
+        // newProject.imageUrl will come as a URL string
+        // newProject.fileUrl will come as a Base64 string for the uploaded file
         const docRef = await db.collection('projects').add(newProject);
         res.status(201).json({ id: docRef.id, ...newProject });
     } catch (error) {
@@ -76,6 +78,8 @@ app.put('/api/projects/:id', async (req, res) => {
     try {
         const projectId = req.params.id;
         const updatedData = req.body;
+        // updatedData.imageUrl will be a URL string
+        // updatedData.fileUrl will be a Base64 string if a new file was uploaded, otherwise it will be the old one
         await db.collection('projects').doc(projectId).update(updatedData);
         res.json({ message: 'Project updated successfully', id: projectId });
     } catch (error) {
@@ -118,6 +122,7 @@ app.post('/api/blogs', async (req, res) => {
         if (!newBlogPost.title || !newBlogPost.excerpt) {
             return res.status(400).json({ message: 'Title and excerpt are required.' });
         }
+        // newBlogPost.imageUrl will come as a URL string
         const docRef = await db.collection('blogPosts').add(newBlogPost);
         res.status(201).json({ id: docRef.id, ...newBlogPost });
     } catch (error) {
@@ -131,6 +136,7 @@ app.put('/api/blogs/:id', async (req, res) => {
     try {
         const blogId = req.params.id;
         const updatedData = req.body;
+        // updatedData.imageUrl will be a URL string
         await db.collection('blogPosts').doc(blogId).update(updatedData);
         res.json({ message: 'Blog post updated successfully', id: blogId });
     } catch (error) {
@@ -173,6 +179,7 @@ app.post('/api/team', async (req, res) => {
         if (!newTeamMember.name || !newTeamMember.title) {
             return res.status(400).json({ message: 'Name and title are required.' });
         }
+        // newTeamMember.imageUrl will come as a URL string
         const docRef = await db.collection('teamMembers').add(newTeamMember);
         res.status(201).json({ id: docRef.id, ...newTeamMember });
     } catch (error) {
@@ -186,6 +193,7 @@ app.put('/api/team/:id', async (req, res) => {
     try {
         const memberId = req.params.id;
         const updatedData = req.body;
+        // updatedData.imageUrl will be a URL string
         await db.collection('teamMembers').doc(memberId).update(updatedData);
         res.json({ message: 'Team member updated successfully', id: memberId });
     } catch (error) {
