@@ -39,20 +39,24 @@ function showMessage(message, type = 'info', callback = null) {
     }
 }
 
-// Helper function to convert file to base64
-function encodeFileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
+// Helper function for API calls
+async function apiCall(method, endpoint, data = null) {
+    const options = {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+    };
+    if (data) {
+        options.body = JSON.stringify(data);
+    }
+    const response = await fetch(endpoint, options);
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    }
+    return response.json();
 }
 
-
-// --- Main Rendering and CRUD Functions (Now in global scope) ---
-
-// Function to handle fetching and rendering for any collection
+// --- Main Rendering and CRUD Functions ---
 async function renderCollection(endpoint, containerId, adminListId, renderCallback) {
     const container = document.getElementById(containerId);
     const adminList = document.getElementById(adminListId);
@@ -63,9 +67,7 @@ async function renderCollection(endpoint, containerId, adminListId, renderCallba
     adminList.innerHTML = '';
 
     try {
-        const response = await fetch(endpoint);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const items = await response.json();
+        const items = await apiCall('GET', endpoint);
 
         container.innerHTML = '';
         if (items.length === 0) {
@@ -85,13 +87,11 @@ async function renderCollection(endpoint, containerId, adminListId, renderCallba
     }
 }
 
-// Function to handle deletion for any collection
 async function deleteItem(endpoint, id, renderFunction) {
     showMessage('Are you sure you want to delete this item?', 'confirm', async (confirmed) => {
         if (confirmed) {
             try {
-                const response = await fetch(`${endpoint}/${id}`, { method: 'DELETE' });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                await apiCall('DELETE', `${endpoint}/${id}`);
                 showMessage('Item deleted successfully!', 'info', renderFunction);
             } catch (error) {
                 console.error('Error deleting item:', error);
@@ -104,7 +104,7 @@ async function deleteItem(endpoint, id, renderFunction) {
 // --- Project Specific Logic ---
 function renderProject(project, isAdmin) {
     const imageHtml = project.imageUrl ? `<img src="${project.imageUrl}" alt="${project.title}" class="w-full h-48 object-cover">` : '';
-    const linkHtml = project.fileUrl ? `<a href="${project.fileUrl}" download="${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.zip" class="inline-block mt-4 bg-[#00acc1] hover:bg-[#7a97ab] text-white text-sm font-semibold py-2 px-4 rounded-full transition duration-300">Download Project File <i class="fas fa-download ml-1"></i></a>` : '';
+    const linkHtml = project.fileUrl ? `<a href="${project.fileUrl}" target="_blank" class="inline-block mt-4 bg-[#00acc1] hover:bg-[#7a97ab] text-white text-sm font-semibold py-2 px-4 rounded-full transition duration-300">View Project <i class="fas fa-external-link-alt ml-1"></i></a>` : '';
 
     if (isAdmin) {
         return `
@@ -127,6 +127,26 @@ function renderProject(project, isAdmin) {
                 </div>
             </div>
         `;
+    }
+}
+
+async function openProjectModal(id) {
+    const modal = document.getElementById('project-modal');
+    const form = document.getElementById('edit-project-form');
+    const submitBtn = document.getElementById('submit-edit-project');
+    
+    // Fetch project data to pre-fill the form
+    try {
+        const project = await apiCall('GET', `/api/projects/${id}`);
+        document.getElementById('edit-project-id').value = id;
+        document.getElementById('edit-project-title').value = project.title;
+        document.getElementById('edit-project-description').value = project.description;
+        document.getElementById('edit-project-image').value = project.imageUrl || '';
+        document.getElementById('edit-project-link').value = project.fileUrl || '';
+        modal.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error fetching project for edit:', error);
+        showMessage('Failed to load project data for editing.', 'error');
     }
 }
 
@@ -155,6 +175,26 @@ function renderBlog(blog, isAdmin) {
                 ${linkHtml}
             </div>
         `;
+    }
+}
+
+async function openBlogModal(id) {
+    const modal = document.getElementById('blog-modal');
+    const form = document.getElementById('edit-blog-form');
+    // Fetch blog data and pre-fill the form
+    try {
+        const blog = await apiCall('GET', `/api/blogs/${id}`);
+        document.getElementById('edit-blog-id').value = id;
+        document.getElementById('edit-blog-title').value = blog.title;
+        document.getElementById('edit-blog-date').value = blog.date;
+        document.getElementById('edit-blog-category').value = blog.category;
+        document.getElementById('edit-blog-excerpt').value = blog.excerpt;
+        document.getElementById('edit-blog-image').value = blog.imageUrl || '';
+        document.getElementById('edit-blog-link').value = blog.link || '';
+        modal.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error fetching blog for edit:', error);
+        showMessage('Failed to load blog post data for editing.', 'error');
     }
 }
 
@@ -189,6 +229,28 @@ function renderTeamMember(member, isAdmin) {
         `;
     }
 }
+
+async function openTeamModal(id) {
+    const modal = document.getElementById('team-modal');
+    const form = document.getElementById('edit-team-form');
+    // Fetch team member data and pre-fill the form
+    try {
+        const member = await apiCall('GET', `/api/team/${id}`);
+        document.getElementById('edit-team-id').value = id;
+        document.getElementById('edit-team-name').value = member.name;
+        document.getElementById('edit-team-title').value = member.title;
+        document.getElementById('edit-team-bio').value = member.bio;
+        document.getElementById('edit-team-image').value = member.imageUrl || '';
+        document.getElementById('edit-team-github').value = member.githubUrl || '';
+        document.getElementById('edit-team-linkedin').value = member.linkedinUrl || '';
+        document.getElementById('edit-team-twitter').value = member.twitterUrl || '';
+        modal.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error fetching team member for edit:', error);
+        showMessage('Failed to load team member data for editing.', 'error');
+    }
+}
+
 
 // --- Main DOMContentLoaded Event Listener ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -258,12 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- CRITICAL FIX: Initial Data Loading ---
-    // These functions are now called on page load to fetch and render data
     renderCollection('/api/projects', 'projects-container', 'admin-project-list', renderProject);
     renderCollection('/api/blogs', 'blog-posts-container', 'admin-blog-list', renderBlog);
     renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember);
 
-    // --- Dynamic Event Listeners (Must be inside DOMContentLoaded) ---
+    // --- Dynamic Event Listeners ---
     document.addEventListener('click', function(e) {
         const id = e.target.dataset.id;
         if (e.target.matches('.delete-project-btn-admin')) {
@@ -278,10 +339,16 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteItem('/api/team', id, () => renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember));
         } else if (e.target.matches('.edit-team-btn-admin')) {
             openTeamModal(id);
+        } else if (e.target.matches('#close-project-modal')) {
+            document.getElementById('project-modal').classList.add('hidden');
+        } else if (e.target.matches('#close-blog-modal')) {
+            document.getElementById('blog-modal').classList.add('hidden');
+        } else if (e.target.matches('#close-team-modal')) {
+            document.getElementById('team-modal').classList.add('hidden');
         }
     });
 
-    // --- Form Submission Logic (Must be inside DOMContentLoaded or have global references) ---
+    // --- Form Submission Logic ---
     const projectUploadForm = document.getElementById('project-upload-form');
     if (projectUploadForm) {
         projectUploadForm.addEventListener('submit', async function(e) {
@@ -289,17 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const title = document.getElementById('project-title').value;
             const description = document.getElementById('project-description').value;
             const imageUrl = document.getElementById('project-image').value;
-            const projectFile = document.getElementById('project-link').files[0];
-            let fileUrl = '';
-            if (projectFile) fileUrl = await encodeFileToBase64(projectFile);
+            const fileUrl = document.getElementById('project-link').value; // Now a link URL
             const newProjectData = { title, description, imageUrl, fileUrl };
             try {
-                const response = await fetch('/api/projects', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newProjectData)
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                await apiCall('POST', '/api/projects', newProjectData);
                 showMessage('Project added successfully!', 'info', () => {
                     projectUploadForm.reset();
                     renderCollection('/api/projects', 'projects-container', 'admin-project-list', renderProject);
@@ -307,6 +367,29 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error adding project:', error);
                 showMessage('Failed to add project. See console for details.', 'error');
+            }
+        });
+    }
+
+    const editProjectForm = document.getElementById('edit-project-form');
+    if (editProjectForm) {
+        editProjectForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-project-id').value;
+            const title = document.getElementById('edit-project-title').value;
+            const description = document.getElementById('edit-project-description').value;
+            const imageUrl = document.getElementById('edit-project-image').value;
+            const fileUrl = document.getElementById('edit-project-link').value;
+            const updatedData = { title, description, imageUrl, fileUrl };
+            try {
+                await apiCall('PUT', `/api/projects/${id}`, updatedData);
+                showMessage('Project updated successfully!', 'info', () => {
+                    document.getElementById('project-modal').classList.add('hidden');
+                    renderCollection('/api/projects', 'projects-container', 'admin-project-list', renderProject);
+                });
+            } catch (error) {
+                console.error('Error updating project:', error);
+                showMessage('Failed to update project. See console for details.', 'error');
             }
         });
     }
@@ -327,12 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const newBlogData = { title, date, category, excerpt, imageUrl, link };
             try {
-                const response = await fetch('/api/blogs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newBlogData)
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                await apiCall('POST', '/api/blogs', newBlogData);
                 showMessage('Blog post added successfully!', 'info', () => {
                     blogUploadForm.reset();
                     renderCollection('/api/blogs', 'blog-posts-container', 'admin-blog-list', renderBlog);
@@ -340,6 +418,82 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error adding blog post:', error);
                 showMessage('Failed to add blog post. See console for details.', 'error');
+            }
+        });
+    }
+
+    const editBlogForm = document.getElementById('edit-blog-form');
+    if (editBlogForm) {
+        editBlogForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-blog-id').value;
+            const title = document.getElementById('edit-blog-title').value;
+            const date = document.getElementById('edit-blog-date').value;
+            const category = document.getElementById('edit-blog-category').value;
+            const excerpt = document.getElementById('edit-blog-excerpt').value;
+            const imageUrl = document.getElementById('edit-blog-image').value;
+            const link = document.getElementById('edit-blog-link').value;
+            const updatedData = { title, date, category, excerpt, imageUrl, link };
+            try {
+                await apiCall('PUT', `/api/blogs/${id}`, updatedData);
+                showMessage('Blog post updated successfully!', 'info', () => {
+                    document.getElementById('blog-modal').classList.add('hidden');
+                    renderCollection('/api/blogs', 'blog-posts-container', 'admin-blog-list', renderBlog);
+                });
+            } catch (error) {
+                console.error('Error updating blog post:', error);
+                showMessage('Failed to update blog post. See console for details.', 'error');
+            }
+        });
+    }
+
+    const teamUploadForm = document.getElementById('team-upload-form');
+    if (teamUploadForm) {
+        teamUploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('team-name').value;
+            const title = document.getElementById('team-title').value;
+            const bio = document.getElementById('team-bio').value;
+            const imageUrl = document.getElementById('team-image').value;
+            const githubUrl = document.getElementById('team-github').value;
+            const linkedinUrl = document.getElementById('team-linkedin').value;
+            const twitterUrl = document.getElementById('team-twitter').value;
+            const newTeamMember = { name, title, bio, imageUrl, githubUrl, linkedinUrl, twitterUrl };
+            try {
+                await apiCall('POST', '/api/team', newTeamMember);
+                showMessage('Team member added successfully!', 'info', () => {
+                    teamUploadForm.reset();
+                    renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember);
+                });
+            } catch (error) {
+                console.error('Error adding team member:', error);
+                showMessage('Failed to add team member. See console for details.', 'error');
+            }
+        });
+    }
+
+    const editTeamForm = document.getElementById('edit-team-form');
+    if (editTeamForm) {
+        editTeamForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-team-id').value;
+            const name = document.getElementById('edit-team-name').value;
+            const title = document.getElementById('edit-team-title').value;
+            const bio = document.getElementById('edit-team-bio').value;
+            const imageUrl = document.getElementById('edit-team-image').value;
+            const githubUrl = document.getElementById('edit-team-github').value;
+            const linkedinUrl = document.getElementById('edit-team-linkedin').value;
+            const twitterUrl = document.getElementById('edit-team-twitter').value;
+            const updatedData = { name, title, bio, imageUrl, githubUrl, linkedinUrl, twitterUrl };
+            try {
+                await apiCall('PUT', `/api/team/${id}`, updatedData);
+                showMessage('Team member updated successfully!', 'info', () => {
+                    document.getElementById('team-modal').classList.add('hidden');
+                    renderCollection('/api/team', 'team-members-container', 'admin-team-list', renderTeamMember);
+                });
+            } catch (error) {
+                console.error('Error updating team member:', error);
+                showMessage('Failed to update team member. See console for details.', 'error');
             }
         });
     }
