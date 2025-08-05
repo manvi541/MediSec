@@ -194,13 +194,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminPanel = document.getElementById('admin-panel');
     const closeAdmin = document.getElementById('close-admin');
 
-    adminToggle.addEventListener('click', () => {
-        adminPanel.classList.toggle('open');
-    });
+    if (adminToggle) {
+        adminToggle.addEventListener('click', () => {
+            console.log('Admin toggle button clicked');
+            adminPanel.classList.toggle('open');
+        });
+    }
 
-    closeAdmin.addEventListener('click', () => {
-        adminPanel.classList.remove('open');
-    });
+    if (closeAdmin) {
+        closeAdmin.addEventListener('click', () => {
+            console.log('Close admin panel button clicked');
+            adminPanel.classList.remove('open');
+        });
+    }
 
     // Handle Project Modals
     const editProjectModal = document.getElementById('edit-project-modal');
@@ -320,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('member-name').value = memberToEdit.name;
                 document.getElementById('member-title').value = memberToEdit.title;
                 document.getElementById('member-bio').value = memberToEdit.bio;
-                document.getElementById('member-image').value = memberToedit.image;
+                document.getElementById('member-image').value = memberToEdit.image;
                 editTeamModal.classList.add('open');
             }
         } else if (e.target.closest('.delete-team')) {
@@ -386,10 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const newProject = {
             title: document.getElementById('project-title').value,
             description: document.getElementById('project-description').value,
-            image: document.getElementById('project-image').value, // Correctly grabs the image URL
-            // The link field is still handled by a separate file input and will need a more complex server-side implementation for file uploads.
-            // For now, we will use a placeholder or the provided URL from the file input.
-            link: document.getElementById('project-link').value // Get the file URL if available
+            image: document.getElementById('project-image').value,
+            link: document.getElementById('project-link').value
         };
         await postData('projects', newProject);
         renderProjects();
