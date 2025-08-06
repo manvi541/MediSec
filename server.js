@@ -1,10 +1,18 @@
 const express = require('express');
 const path = require('path');
 const admin = require('firebase-admin');
+const multer = require('multer');
+
+// Configure multer for in-memory storage
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB file size limit
+    },
+});
 
 // Check if Firebase service account key is provided via environment variable
 const serviceAccountKey = process.env.FIREBASE_KEY;
-
 if (!serviceAccountKey) {
     console.error("FIREBASE_KEY environment variable is not set. Please provide the JSON key for your Firebase service account.");
     process.exit(1);
@@ -14,7 +22,8 @@ if (!serviceAccountKey) {
 try {
     const serviceAccount = JSON.parse(serviceAccountKey);
     admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET // Ensure this env variable is set
     });
 } catch (error) {
     console.error("Failed to parse FIREBASE_KEY. Ensure it's a properly formatted JSON string.", error);
@@ -22,6 +31,7 @@ try {
 }
 
 const db = admin.firestore();
+const bucket = admin.storage().bucket();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -135,9 +145,25 @@ app.get('/api/team', async (req, res) => {
     }
 });
 
-app.post('/api/team', async (req, res) => {
+app.post('/api/team', upload.single('image'), async (req, res) => {
     try {
         const newMember = req.body;
+
+        if (req.file) {
+            const fileName = `team-members/${Date.now()}-${req.file.originalname}`;
+            const file = bucket.file(fileName);
+            await file.save(req.file.buffer, {
+                metadata: {
+                    contentType: req.file.mimetype,
+                },
+            });
+            const [url] = await file.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491', // A very far-future date
+            });
+            newMember.image = url;
+        }
+
         const docRef = await db.collection('team').add(newMember);
         console.log(`Team member added with ID: ${docRef.id}`);
         res.status(201).json({ id: docRef.id, ...newMember });
@@ -147,10 +173,25 @@ app.post('/api/team', async (req, res) => {
     }
 });
 
-app.put('/api/team/:id', async (req, res) => {
+app.put('/api/team/:id', upload.single('image'), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedMember = req.body;
+
+        if (req.file) {
+            const fileName = `team-members/${Date.now()}-${req.file.originalname}`;
+            const file = bucket.file(fileName);
+            await file.save(req.file.buffer, {
+                metadata: {
+                    contentType: req.file.mimetype,
+                },
+            });
+            const [url] = await file.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491', // A very far-future date
+            });
+            updatedMember.image = url;
+        }
 
         await db.collection('team').doc(id).update(updatedMember);
         res.json({ id, ...updatedMember });
