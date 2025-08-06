@@ -12,32 +12,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const postData = async (endpoint, data) => {
+    // Generic function for JSON POST/PUT
+    const sendJsonData = async (method, endpoint, data) => {
         try {
             const response = await fetch(`/api/${endpoint}`, {
-                method: 'POST',
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
         } catch (error) {
-            console.error(`Failed to add ${endpoint}:`, error);
+            console.error(`Failed to ${method.toLowerCase()} ${endpoint}:`, error);
             throw error;
         }
     };
 
-    const updateData = async (endpoint, id, data) => {
+    // Specific function for file upload POST/PUT
+    const sendFormData = async (method, endpoint, formData) => {
         try {
-            const response = await fetch(`/api/${endpoint}/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+            const response = await fetch(`/api/${endpoint}`, {
+                method: method,
+                body: formData,
             });
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
         } catch (error) {
-            console.error(`Failed to update ${endpoint}:`, error);
+            console.error(`Failed to ${method.toLowerCase()} ${endpoint}:`, error);
             throw error;
         }
     };
@@ -205,9 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
             adminPanel.classList.remove('open');
         });
     }
-    
+
     // Admin Edit Modal Handlers
-    
+
     const showModal = (modalId) => {
         document.getElementById(modalId).classList.remove('hidden');
     };
@@ -220,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById(modalId);
         const closeBtn = modal.querySelector(`#close-${modalId}`);
         const cancelBtn = modal.querySelector(`#cancel-${modalId}-btn`);
-        
+
         if (closeBtn) closeBtn.addEventListener('click', () => hideModal(modalId));
         if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal(modalId));
     };
@@ -262,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 image: document.getElementById('modal-project-image').value,
                 link: document.getElementById('modal-project-link').value,
             };
-            await updateData('projects', currentEditProjectId, updatedProject);
+            await sendJsonData('PUT', `projects/${currentEditProjectId}`, updatedProject);
             renderProjects();
             hideModal('edit-project-modal');
         });
@@ -309,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 image: document.getElementById('modal-blog-image').value,
                 link: document.getElementById('modal-blog-link').value,
             };
-            await updateData('blogs', currentEditBlogId, updatedBlog);
+            await sendJsonData('PUT', `blogs/${currentEditBlogId}`, updatedBlog);
             renderBlogPosts();
             hideModal('edit-blog-modal');
         });
@@ -331,7 +332,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('member-name').value = memberToEdit.name;
                 document.getElementById('member-title').value = memberToEdit.title;
                 document.getElementById('member-bio').value = memberToEdit.bio;
-                document.getElementById('member-image').value = memberToEdit.image;
+
+                // Store current image URL and show a preview
+                document.getElementById('member-image-url').value = memberToEdit.image;
+                const imagePreview = document.getElementById('current-image-preview');
+                imagePreview.innerHTML = memberToEdit.image ? `<img src="${memberToEdit.image}" class="w-16 h-16 object-cover rounded-full mt-2" alt="Current Profile Image">` : 'No current image.';
+
+                // Clear file input on modal open
+                document.getElementById('member-image-file').value = '';
+
                 showModal('edit-team-modal');
             }
         } else if (e.target.closest('.delete-team')) {
@@ -346,13 +355,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editTeamForm) {
         editTeamForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const updatedMember = {
-                name: document.getElementById('member-name').value,
-                title: document.getElementById('member-title').value,
-                bio: document.getElementById('member-bio').value,
-                image: document.getElementById('member-image').value,
-            };
-            await updateData('team', currentEditMemberId, updatedMember);
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('member-name').value);
+            formData.append('title', document.getElementById('member-title').value);
+            formData.append('bio', document.getElementById('member-bio').value);
+
+            const imageFile = document.getElementById('member-image-file').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            } else {
+                // If no new file, send the existing URL
+                formData.append('image', document.getElementById('member-image-url').value);
+            }
+
+            await sendFormData('PUT', `team/${currentEditMemberId}`, formData);
             renderTeamMembers();
             hideModal('edit-team-modal');
         });
@@ -370,20 +387,25 @@ document.addEventListener('DOMContentLoaded', () => {
             image: document.getElementById('blog-image').value,
             link: document.getElementById('blog-link').value
         };
-        await postData('blogs', newBlog);
+        await sendJsonData('POST', 'blogs', newBlog);
         renderBlogPosts();
         e.target.reset();
     });
 
     document.getElementById('add-team-member-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const newMember = {
-            name: document.getElementById('new-member-name').value,
-            title: document.getElementById('new-member-title').value,
-            bio: document.getElementById('new-member-bio').value,
-            image: document.getElementById('new-member-image').value,
-        };
-        await postData('team', newMember);
+
+        const formData = new FormData();
+        formData.append('name', document.getElementById('new-member-name').value);
+        formData.append('title', document.getElementById('new-member-title').value);
+        formData.append('bio', document.getElementById('new-member-bio').value);
+        
+        const imageFile = document.getElementById('new-member-image').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        await sendFormData('POST', 'team', formData);
         renderTeamMembers();
         e.target.reset();
     });
@@ -396,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
             image: document.getElementById('project-image').value,
             link: document.getElementById('project-link').value
         };
-        await postData('projects', newProject);
+        await sendJsonData('POST', 'projects', newProject);
         renderProjects();
         e.target.reset();
     });
