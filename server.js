@@ -62,10 +62,16 @@ const uploadFileToFirebase = async (file) => {
         });
 
         blobStream.on('finish', async () => {
-            // Make the file publicly accessible
-            await fileUpload.makePublic();
-            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-            resolve(publicUrl);
+            try {
+                // Make the file publicly accessible
+                await fileUpload.makePublic();
+                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                console.log(`File uploaded successfully: ${publicUrl}`);
+                resolve(publicUrl);
+            } catch (error) {
+                console.error('Error making file public:', error);
+                reject(new Error('Failed to make file public'));
+            }
         });
 
         blobStream.end(file.buffer);
@@ -79,7 +85,7 @@ app.get('/api/projects', async (req, res) => {
         res.json(projects);
     } catch (error) {
         console.error('Error fetching projects:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
@@ -88,7 +94,7 @@ app.post('/api/projects', async (req, res) => {
         const newProject = req.body;
         const docRef = await db.collection('projects').add(newProject);
         res.status(201).json({ id: docRef.id, ...newProject });
-    } catch (error) {
+    } catch (error) => {
         console.error('Error adding project:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -123,7 +129,7 @@ app.get('/api/blogs', async (req, res) => {
         res.json(blogs);
     } catch (error) {
         console.error('Error fetching blogs:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
@@ -167,7 +173,7 @@ app.get('/api/team', async (req, res) => {
         res.json(team);
     } catch (error) {
         console.error('Error fetching team:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
@@ -176,14 +182,19 @@ app.post('/api/team', upload.single('image'), async (req, res) => {
         const newMember = req.body;
         // Upload image to Firebase Storage if a file is present
         if (req.file) {
+            console.log('File detected. Attempting to upload...');
             newMember.image = await uploadFileToFirebase(req.file);
+            console.log('File upload successful.');
+        } else {
+            console.log('No file detected. Storing data without an image.');
         }
 
         const docRef = await db.collection('team').add(newMember);
+        console.log(`Team member added with ID: ${docRef.id}`);
         res.status(201).json({ id: docRef.id, ...newMember });
     } catch (error) {
         console.error('Error adding team member:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
