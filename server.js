@@ -199,7 +199,7 @@ app.put('/api/team/:id', upload.single('image'), async (req, res) => {
 
         await db.collection('team').doc(id).update(updatedMember);
         res.json({ id, ...updatedMember });
-    } catch (error) => {
+    } catch (error) {
         console.error('Error updating team member:', error);
         res.status(404).json({ message: 'Team member not found' });
     }
