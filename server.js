@@ -1,8 +1,6 @@
 const express = require('express');
 const path = require('path');
 const admin = require('firebase-admin');
-const { v4: uuidv4 } = require('uuid');
-const multer = require('multer');
 
 // Check if Firebase service account key is provided via environment variable
 const serviceAccountKey = process.env.FIREBASE_KEY;
@@ -16,8 +14,7 @@ if (!serviceAccountKey) {
 try {
     const serviceAccount = JSON.parse(serviceAccountKey);
     admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: serviceAccount.project_id + '.appspot.com'
+        credential: admin.credential.cert(serviceAccount)
     });
 } catch (error) {
     console.error("Failed to parse FIREBASE_KEY. Ensure it's a properly formatted JSON string.", error);
@@ -25,12 +22,8 @@ try {
 }
 
 const db = admin.firestore();
-const bucket = admin.storage().bucket();
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Set up multer for memory storage
-const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -41,41 +34,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const getCollection = async (collectionName) => {
     const snapshot = await db.collection(collectionName).get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-};
-
-// Helper function to upload file to Firebase Storage
-const uploadFileToFirebase = async (file) => {
-    if (!file) return null;
-
-    const fileName = `team_profiles/${uuidv4()}-${file.originalname}`;
-    const fileUpload = bucket.file(fileName);
-    const blobStream = fileUpload.createWriteStream({
-        metadata: {
-            contentType: file.mimetype,
-        },
-    });
-
-    return new Promise((resolve, reject) => {
-        blobStream.on('error', (error) => {
-            console.error('Error uploading to Firebase Storage:', error);
-            reject(new Error('Upload failed'));
-        });
-
-        blobStream.on('finish', async () => {
-            try {
-                // Make the file publicly accessible
-                await fileUpload.makePublic();
-                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-                console.log(`File uploaded successfully: ${publicUrl}`);
-                resolve(publicUrl);
-            } catch (error) {
-                console.error('Error making file public:', error);
-                reject(new Error('Failed to make file public'));
-            }
-        });
-
-        blobStream.end(file.buffer);
-    });
 };
 
 // Projects
@@ -177,18 +135,9 @@ app.get('/api/team', async (req, res) => {
     }
 });
 
-app.post('/api/team', upload.single('image'), async (req, res) => {
+app.post('/api/team', async (req, res) => {
     try {
         const newMember = req.body;
-        // Upload image to Firebase Storage if a file is present
-        if (req.file) {
-            console.log('File detected. Attempting to upload...');
-            newMember.image = await uploadFileToFirebase(req.file);
-            console.log('File upload successful.');
-        } else {
-            console.log('No file detected. Storing data without an image.');
-        }
-
         const docRef = await db.collection('team').add(newMember);
         console.log(`Team member added with ID: ${docRef.id}`);
         res.status(201).json({ id: docRef.id, ...newMember });
@@ -198,15 +147,10 @@ app.post('/api/team', upload.single('image'), async (req, res) => {
     }
 });
 
-app.put('/api/team/:id', upload.single('image'), async (req, res) => {
+app.put('/api/team/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updatedMember = req.body;
-
-        // Upload image to Firebase Storage if a new file is present
-        if (req.file) {
-            updatedMember.image = await uploadFileToFirebase(req.file);
-        }
 
         await db.collection('team').doc(id).update(updatedMember);
         res.json({ id, ...updatedMember });
