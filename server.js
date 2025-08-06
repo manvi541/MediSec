@@ -94,9 +94,9 @@ app.post('/api/projects', async (req, res) => {
         const newProject = req.body;
         const docRef = await db.collection('projects').add(newProject);
         res.status(201).json({ id: docRef.id, ...newProject });
-    } catch (error) => {
+    } catch (error) {
         console.error('Error adding project:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
@@ -107,7 +107,7 @@ app.put('/api/projects/:id', async (req, res) => {
         res.json({ id, ...req.body });
     } catch (error) {
         console.error('Error updating project:', error);
-        res.status(404).json({ message: 'Project not found' });
+        res.status(404).json({ message: 'Project not found', error: error.message });
     }
 });
 
@@ -118,7 +118,7 @@ app.delete('/api/projects/:id', async (req, res) => {
         res.status(200).json({ message: 'Project deleted' });
     } catch (error) {
         console.error('Error deleting project:', error);
-        res.status(404).json({ message: 'Project not found' });
+        res.status(404).json({ message: 'Project not found', error: error.message });
     }
 });
 
@@ -140,7 +140,7 @@ app.post('/api/blogs', async (req, res) => {
         res.status(201).json({ id: docRef.id, ...newBlog });
     } catch (error) {
         console.error('Error adding blog:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
@@ -151,7 +151,7 @@ app.put('/api/blogs/:id', async (req, res) => {
         res.json({ id, ...req.body });
     } catch (error) {
         console.error('Error updating blog:', error);
-        res.status(404).json({ message: 'Blog not found' });
+        res.status(404).json({ message: 'Blog not found', error: error.message });
     }
 });
 
@@ -162,7 +162,7 @@ app.delete('/api/blogs/:id', async (req, res) => {
         res.status(200).json({ message: 'Blog deleted' });
     } catch (error) {
         console.error('Error deleting blog:', error);
-        res.status(404).json({ message: 'Blog not found' });
+        res.status(404).json({ message: 'Blog not found', error: error.message });
     }
 });
 
@@ -212,7 +212,7 @@ app.put('/api/team/:id', upload.single('image'), async (req, res) => {
         res.json({ id, ...updatedMember });
     } catch (error) {
         console.error('Error updating team member:', error);
-        res.status(404).json({ message: 'Team member not found' });
+        res.status(404).json({ message: 'Team member not found', error: error.message });
     }
 });
 
@@ -223,7 +223,7 @@ app.delete('/api/team/:id', async (req, res) => {
         res.status(200).json({ message: 'Team member deleted' });
     } catch (error) {
         console.error('Error deleting team member:', error);
-        res.status(404).json({ message: 'Team member not found' });
+        res.status(404).json({ message: 'Team member not found', error: error.message });
     }
 });
 
