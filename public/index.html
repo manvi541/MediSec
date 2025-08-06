@@ -135,7 +135,7 @@
             background-color: #00acc1;
             color: white;
             padding: 8px 16px;
-            border-radius: 6px; /* Changed from 66px for better consistency */
+            border-radius: 66px; /* Changed from 66px for better consistency */
             cursor: pointer;
             border: none;
             font-size: 0.9rem;
@@ -469,7 +469,7 @@
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <form id="edit-team-form">
+                    <form id="edit-team-form" enctype="multipart/form-data">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="member-name">
@@ -491,10 +491,12 @@
                             <textarea class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-bio" rows="3"></textarea>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="member-image">
-                                Profile Image URL
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="member-image-file">
+                                Profile Image
                             </label>
-                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-image" type="url" placeholder="https://example.com/profile.jpg">
+                            <input class="form-input w-full px-3 py-2 border border-gray-300 rounded-md" id="member-image-file" type="file" accept="image/*">
+                            <input type="hidden" id="member-image-url">
+                            <div id="current-image-preview" class="mt-2 text-sm text-gray-500"></div>
                         </div>
                         <div class="flex justify-between">
                             <button type="button" id="delete-member-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 hidden">
@@ -745,7 +747,8 @@
 
         <div class="admin-section">
             <h3 class="text-xl font-semibold mb-4">Add New Team Member</h3>
-            <form id="add-team-member-form"> <label for="new-member-name" class="admin-label">Full Name:</label>
+            <form id="add-team-member-form" enctype="multipart/form-data">
+                <label for="new-member-name" class="admin-label">Full Name:</label>
                 <input type="text" id="new-member-name" class="admin-input" placeholder="John Doe" required>
 
                 <label for="new-member-title" class="admin-label">Title:</label>
@@ -754,8 +757,8 @@
                 <label for="new-member-bio" class="admin-label">Bio:</label>
                 <textarea id="new-member-bio" class="admin-input" rows="3" placeholder="A short bio about the team member..."></textarea>
 
-                <label for="new-member-image" class="admin-label">Profile Image URL:</label>
-                <input type="url" id="new-member-image" class="admin-input" placeholder="https://example.com/profile.jpg">
+                <label for="new-member-image" class="admin-label">Profile Image:</label>
+                <input type="file" id="new-member-image" class="admin-input" accept="image/*">
 
                 <button type="submit" class="admin-button w-full">Add Team Member</button>
             </form>
