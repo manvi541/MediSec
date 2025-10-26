@@ -447,14 +447,38 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('.delete-team')) {
             const id = e.target.closest('.delete-team').dataset.id;
             if (confirm('Are you sure you want to delete this team member?')) {
+                // Optimistically remove item from UI/local cache immediately
+                localCache.team = localCache.team.filter(m => m.id !== id);
+                // Remove the admin list item DOM node for immediate feedback
+                const listItem = e.target.closest('.admin-list-item');
+                if (listItem) listItem.remove();
+                renderTeamMembers();
+
+                // Attempt server delete in background; if it fails, log but UI already updated
                 try {
                     await deleteData('team', id);
                 } catch (err) {
-                        localCache.team = localCache.team.filter(m => m.id !== id);
+                    console.warn('Server delete failed for team id', id, err);
+                    // If the id looks like a local-only id (starts with our prefix) or delete failed,
+                    // try to find a matching server-side record by name and delete that.
+                    try {
+                        const listItemName = listItem ? (listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '') : '';
+                        if (listItemName) {
+                            const serverMembers = await fetchData('team');
+                            const match = serverMembers.find(m => (m.name || '').trim() === listItemName);
+                            if (match) {
+                                try {
+                                    await deleteData('team', match.id);
+                                    console.log('Deleted server-side team member by name match:', match.id);
+                                } catch (deleteErr) {
+                                    console.error('Failed to delete matched server-side team member', match.id, deleteErr);
+                                }
+                            }
+                        }
+                    } catch (lookupErr) {
+                        console.error('Failed to lookup server-side team members for deletion', lookupErr);
+                    }
                 }
-                    // Ensure local cache cleanup so item doesn't reappear
-                    localCache.team = localCache.team.filter(m => m.id !== id);
-                renderTeamMembers();
             }
         }
     });
