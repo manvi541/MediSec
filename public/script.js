@@ -318,8 +318,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     await deleteData('projects', id);
                 } catch (err) {
                     // If server unavailable, remove from local cache
-                    localCache.projects = localCache.projects.filter(p => p.id !== id);
+                        localCache.projects = localCache.projects.filter(p => p.id !== id);
                 }
+                    // Always remove from localCache in case the item exists locally
+                    localCache.projects = localCache.projects.filter(p => p.id !== id);
                 renderProjects();
             }
         }
@@ -379,8 +381,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await deleteData('blogs', id);
                 } catch (err) {
-                    localCache.blogs = localCache.blogs.filter(b => b.id !== id);
+                        localCache.blogs = localCache.blogs.filter(b => b.id !== id);
                 }
+                    // Ensure local cache cleanup
+                    localCache.blogs = localCache.blogs.filter(b => b.id !== id);
                 renderBlogPosts();
             }
         }
@@ -446,8 +450,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await deleteData('team', id);
                 } catch (err) {
-                    localCache.team = localCache.team.filter(m => m.id !== id);
+                        localCache.team = localCache.team.filter(m => m.id !== id);
                 }
+                    // Ensure local cache cleanup so item doesn't reappear
+                    localCache.team = localCache.team.filter(m => m.id !== id);
                 renderTeamMembers();
             }
         }
@@ -602,6 +608,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (err) {
                         localCache.events = localCache.events.filter(ev => ev.id !== id);
                     }
+                    // Always remove from local cache as well
+                    localCache.events = localCache.events.filter(ev => ev.id !== id);
                     renderEvents();
                 }
             } else if (e.target.closest('.edit-event')) {
