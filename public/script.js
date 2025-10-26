@@ -313,16 +313,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (e.target.closest('.delete-project')) {
             const id = e.target.closest('.delete-project').dataset.id;
+            const listItem = e.target.closest('.admin-list-item');
+            const titleText = listItem && listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '';
             if (confirm('Are you sure you want to delete this project?')) {
+                // Optimistically remove locally for immediate feedback
+                localCache.projects = localCache.projects.filter(p => p.id !== id);
+                if (listItem) listItem.remove();
+                renderProjects();
                 try {
                     await deleteData('projects', id);
                 } catch (err) {
-                    // If server unavailable, remove from local cache
-                        localCache.projects = localCache.projects.filter(p => p.id !== id);
+                    console.warn('Server delete failed for project id', id, err);
+                    // Fallback: try to find server-side project by title and delete that
+                    try {
+                        if (titleText) {
+                            const serverProjects = await fetchData('projects');
+                            let match = serverProjects.find(p => (p.title || '').trim().toLowerCase() === titleText.toLowerCase());
+                            if (!match) {
+                                match = serverProjects.find(p => (p.title || '').toLowerCase().includes(titleText.toLowerCase()) || titleText.toLowerCase().includes((p.title || '').toLowerCase()));
+                            }
+                            if (match) {
+                                try {
+                                    await deleteData('projects', match.id);
+                                    console.log('Deleted server-side project by title match:', match.id);
+                                } catch (delErr) {
+                                    console.error('Failed to delete matched server-side project', match.id, delErr);
+                                }
+                            }
+                        }
+                    } catch (lookupErr) {
+                        console.error('Failed to lookup server-side projects for deletion', lookupErr);
+                    }
                 }
-                    // Always remove from localCache in case the item exists locally
-                    localCache.projects = localCache.projects.filter(p => p.id !== id);
-                renderProjects();
             }
         }
     });
@@ -377,15 +399,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (e.target.closest('.delete-blog')) {
             const id = e.target.closest('.delete-blog').dataset.id;
+            const listItem = e.target.closest('.admin-list-item');
+            const titleText = listItem && listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '';
             if (confirm('Are you sure you want to delete this blog post?')) {
+                // Optimistically remove locally and from UI
+                localCache.blogs = localCache.blogs.filter(b => b.id !== id);
+                if (listItem) listItem.remove();
+                renderBlogPosts();
                 try {
                     await deleteData('blogs', id);
                 } catch (err) {
-                        localCache.blogs = localCache.blogs.filter(b => b.id !== id);
+                    console.warn('Server delete failed for blog id', id, err);
+                    // Fallback: try to find server-side blog by title and delete
+                    try {
+                        if (titleText) {
+                            const serverBlogs = await fetchData('blogs');
+                            let match = serverBlogs.find(b => (b.title || '').trim().toLowerCase() === titleText.toLowerCase());
+                            if (!match) {
+                                match = serverBlogs.find(b => (b.title || '').toLowerCase().includes(titleText.toLowerCase()) || titleText.toLowerCase().includes((b.title || '').toLowerCase()));
+                            }
+                            if (match) {
+                                try {
+                                    await deleteData('blogs', match.id);
+                                    console.log('Deleted server-side blog by title match:', match.id);
+                                } catch (delErr) {
+                                    console.error('Failed to delete matched server-side blog', match.id, delErr);
+                                }
+                            }
+                        }
+                    } catch (lookupErr) {
+                        console.error('Failed to lookup server-side blogs for deletion', lookupErr);
+                    }
                 }
-                    // Ensure local cache cleanup
-                    localCache.blogs = localCache.blogs.filter(b => b.id !== id);
-                renderBlogPosts();
             }
         }
     });
@@ -626,15 +671,38 @@ document.addEventListener('DOMContentLoaded', () => {
         adminEventList.addEventListener('click', async (e) => {
             if (e.target.closest('.delete-event')) {
                 const id = e.target.closest('.delete-event').dataset.id;
+                const listItem = e.target.closest('.admin-list-item');
+                const titleText = listItem && listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '';
                 if (confirm('Are you sure you want to delete this event?')) {
+                    // Optimistically remove locally and from UI
+                    localCache.events = localCache.events.filter(ev => ev.id !== id);
+                    if (listItem) listItem.remove();
+                    renderEvents();
                     try {
                         await deleteData('events', id);
                     } catch (err) {
-                        localCache.events = localCache.events.filter(ev => ev.id !== id);
+                        console.warn('Server delete failed for event id', id, err);
+                        // Fallback: try to find server-side event by title and delete
+                        try {
+                            if (titleText) {
+                                const serverEvents = await fetchData('events');
+                                let match = serverEvents.find(ev => (ev.title || '').trim().toLowerCase() === titleText.toLowerCase());
+                                if (!match) {
+                                    match = serverEvents.find(ev => (ev.title || '').toLowerCase().includes(titleText.toLowerCase()) || titleText.toLowerCase().includes((ev.title || '').toLowerCase()));
+                                }
+                                if (match) {
+                                    try {
+                                        await deleteData('events', match.id);
+                                        console.log('Deleted server-side event by title match:', match.id);
+                                    } catch (delErr) {
+                                        console.error('Failed to delete matched server-side event', match.id, delErr);
+                                    }
+                                }
+                            }
+                        } catch (lookupErr) {
+                            console.error('Failed to lookup server-side events for deletion', lookupErr);
+                        }
                     }
-                    // Always remove from local cache as well
-                    localCache.events = localCache.events.filter(ev => ev.id !== id);
-                    renderEvents();
                 }
             } else if (e.target.closest('.edit-event')) {
                 // Simple inline edit could be implemented, but for now prompt for basic edits
