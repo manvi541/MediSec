@@ -20,6 +20,29 @@ document.addEventListener('DOMContentLoaded', () => {
         events: []
     };
 
+    // Simple on-screen message helper using #custom-message-box in the HTML
+    const showMessage = (msg, isError = false, timeout = 3000) => {
+        try {
+            const box = document.getElementById('custom-message-box');
+            const text = document.getElementById('custom-message-text');
+            const cancelBtn = document.getElementById('custom-message-cancel-btn');
+            const confirmBtn = document.getElementById('custom-message-confirm-btn');
+            if (!box || !text || !confirmBtn) return;
+            text.textContent = msg;
+            box.classList.remove('hidden');
+            // hide cancel (we don't need it here)
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            confirmBtn.textContent = isError ? 'Close' : 'OK';
+            const hide = () => box.classList.add('hidden');
+            // allow manual close
+            confirmBtn.onclick = hide;
+            // auto-hide after timeout
+            if (timeout > 0) setTimeout(hide, timeout);
+        } catch (err) {
+            console.error('showMessage failed', err);
+        }
+    };
+
     const generateId = (prefix = '') => `${prefix}${Date.now()}-${Math.floor(Math.random()*10000)}`;
 
     // Generic function for JSON POST/PUT
@@ -322,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderProjects();
                 try {
                     await deleteData('projects', id);
+                    showMessage('Project deleted.', false, 2500);
                 } catch (err) {
                     console.warn('Server delete failed for project id', id, err);
                     // Fallback: try to find server-side project by title and delete that
@@ -336,8 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 try {
                                     await deleteData('projects', match.id);
                                     console.log('Deleted server-side project by title match:', match.id);
+                                    showMessage('Project deleted (matched by title).', false, 2500);
                                 } catch (delErr) {
                                     console.error('Failed to delete matched server-side project', match.id, delErr);
+                                    showMessage('Failed to delete project on server.', true, 4000);
                                 }
                             }
                         }
@@ -408,6 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderBlogPosts();
                 try {
                     await deleteData('blogs', id);
+                    showMessage('Blog post deleted.', false, 2500);
                 } catch (err) {
                     console.warn('Server delete failed for blog id', id, err);
                     // Fallback: try to find server-side blog by title and delete
@@ -422,8 +449,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 try {
                                     await deleteData('blogs', match.id);
                                     console.log('Deleted server-side blog by title match:', match.id);
+                                    showMessage('Blog post deleted (matched by title).', false, 2500);
                                 } catch (delErr) {
                                     console.error('Failed to delete matched server-side blog', match.id, delErr);
+                                    showMessage('Failed to delete blog on server.', true, 4000);
                                 }
                             }
                         }
@@ -502,6 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Attempt server delete in background; if it fails, log but UI already updated
                 try {
                     await deleteData('team', id);
+                    showMessage('Team member deleted.', false, 2500);
                 } catch (err) {
                     console.warn('Server delete failed for team id', id, err);
                     // If the id looks like a local-only id (starts with our prefix) or delete failed,
@@ -515,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 try {
                                     await deleteData('team', match.id);
                                     console.log('Deleted server-side team member by name match:', match.id);
+                                    showMessage('Team member deleted (matched by name).', false, 2500);
                                 } catch (deleteErr) {
                                     console.error('Failed to delete matched server-side team member', match.id, deleteErr);
                                 }
@@ -680,6 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderEvents();
                     try {
                         await deleteData('events', id);
+                        showMessage('Event deleted.', false, 2500);
                     } catch (err) {
                         console.warn('Server delete failed for event id', id, err);
                         // Fallback: try to find server-side event by title and delete
@@ -694,8 +726,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     try {
                                         await deleteData('events', match.id);
                                         console.log('Deleted server-side event by title match:', match.id);
+                                        showMessage('Event deleted (matched by title).', false, 2500);
                                     } catch (delErr) {
                                         console.error('Failed to delete matched server-side event', match.id, delErr);
+                                        showMessage('Failed to delete event on server.', true, 4000);
                                     }
                                 }
                             }
