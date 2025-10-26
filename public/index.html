@@ -252,6 +252,7 @@
                 <div class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
                     <a href="#home" class="nav-link text-white px-3 py-2 text-sm font-medium">Home</a>
                     <a href="#mission" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Mission</a>
+                    <a href="#events" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Events</a>
                     <a href="#projects" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Projects/Blogs</a>
                     <a href="#team" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Team</a>
                     <a href="#instagram-feed" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Instagram</a>
@@ -269,14 +270,15 @@
 
         <div class="hidden md:hidden" id="mobile-menu">
             <div class="pt-2 pb-3 space-y-1">
-                <a href="#home" class="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-800 hover:bg-gray-50">Home</a>
-                <a href="#mission" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Mission</a>
-                <a href="#projects" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Blogs</a>
-                <a href="#team" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Team</a>
-                <a href="#instagram-feed" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Instagram</a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Make a Chapter</a>
-                <a href="#join" class="block px-3 py-2 text-base font-medium text-[#00acc1] hover:text-[#9ad8fa] hover:bg-blue-50">Join Us</a>
-            </div>
+                    <a href="#home" class="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-800 hover:bg-gray-50">Home</a>
+                    <a href="#mission" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Mission</a>
+                    <a href="#events" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Events</a>
+                    <a href="#projects" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Blogs</a>
+                    <a href="#team" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Team</a>
+                    <a href="#instagram-feed" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Instagram</a>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Make a Chapter</a>
+                    <a href="#join" class="block px-3 py-2 text-base font-medium text-[#00acc1] hover:text-[#9ad8fa] hover:bg-blue-50">Join Us</a>
+                </div>
         </div>
     </nav>
 
@@ -302,6 +304,8 @@
             </div>
         </div>
     </section>
+
+    <!-- Events section moved to sit under Mission (see below) -->
 
     <section class="bg-white py-12 border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -399,6 +403,21 @@
         </div>
     </section>
 
+    <!-- Insert Events section directly under Mission -->
+    <section id="events" class="py-20 bg-gray-50 animate-fade-in border-t-2 border-[#00acc1]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Events & Volunteer Opportunities</h2>
+                <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
+                <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">See our past events and current volunteer opportunities.</p>
+            </div>
+
+            <div id="events-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                <p class="col-span-full text-center text-gray-500">Loading events...</p>
+            </div>
+        </div>
+    </section>
+
     <section id="projects" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -439,7 +458,8 @@
         </div>
     </section>
 
-      <div id="team-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <section id="team" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
+            <div id="team-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
             <img src="images/image_e87710.jpg" alt="Team Member 1" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
             <h3 class="text-xl font-bold text-gray-900 mb-1">Jane Doe</h3>
@@ -457,7 +477,7 @@
             <div class="mt-12 text-center">
                 <p class="text-gray-600 mb-6">We're building a passionate group of professionals and students. Stay tuned for our full team announcement!</p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                    <a href="#team" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
                         Meet Our Full Team
                         <i class="fas fa-users ml-2"></i>
                     </a>
@@ -772,6 +792,36 @@
             <h3 class="text-xl font-semibold mb-4">Current Team Members</h3>
             <div id="admin-team-list">
                 </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="text-xl font-semibold mb-4">Add New Event</h3>
+            <form id="event-upload-form" enctype="multipart/form-data">
+                <label for="event-title" class="admin-label">Event Title:</label>
+                <input type="text" id="event-title" class="admin-input" placeholder="Event Title" required>
+
+                <label for="event-date" class="admin-label">Date:</label>
+                <input type="date" id="event-date" class="admin-input" required>
+
+                <label for="event-location" class="admin-label">Location:</label>
+                <input type="text" id="event-location" class="admin-input" placeholder="City, Venue">
+
+                <label for="event-description" class="admin-label">Description:</label>
+                <textarea id="event-description" class="admin-input" rows="3" placeholder="Short description of the event..."></textarea>
+
+                <label for="event-image" class="admin-label">Image (optional):</label>
+                <input type="file" id="event-image" class="admin-input" accept="image/*">
+
+                <label for="event-link" class="admin-label">External Link (optional):</label>
+                <input type="url" id="event-link" class="admin-input" placeholder="https://example.com/event-page">
+
+                <button type="submit" class="admin-button w-full">Add Event</button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="text-xl font-semibold mb-4">Current Events</h3>
+            <div id="admin-event-list"></div>
         </div>
     </div>
 

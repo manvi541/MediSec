@@ -12,6 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Local in-memory fallback cache when server is unavailable
+    const localCache = {
+        projects: [],
+        blogs: [],
+        team: [],
+        events: []
+    };
+
+    const generateId = (prefix = '') => `${prefix}${Date.now()}-${Math.floor(Math.random()*10000)}`;
+
     // Generic function for JSON POST/PUT
     const sendJsonData = async (method, endpoint, data) => {
         try {
@@ -64,13 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
         adminList.innerHTML = '';
 
-        if (projects.length === 0) {
+        const allProjects = [...projects, ...localCache.projects];
+
+        if (allProjects.length === 0) {
             container.innerHTML = '<p class="col-span-full text-center text-gray-500">No projects added yet.</p>';
             adminList.innerHTML = '<p class="text-center text-gray-500">No projects added yet.</p>';
             return;
         }
 
-        projects.forEach(project => {
+        allProjects.forEach(project => {
             const publicHtml = `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
                     <img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover">
@@ -109,13 +121,15 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
         adminList.innerHTML = '';
 
-        if (blogPosts.length === 0) {
+        const allBlogs = [...blogPosts, ...localCache.blogs];
+
+        if (allBlogs.length === 0) {
             container.innerHTML = '<p class="col-span-full text-center text-gray-500">No blog posts added yet.</p>';
             adminList.innerHTML = '<p class="text-center text-gray-500">No blog posts added yet.</p>';
             return;
         }
 
-        blogPosts.forEach(blog => {
+        allBlogs.forEach(blog => {
             const publicHtml = `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
                     <img src="${blog.image || 'https://via.placeholder.com/400x250.png?text=No+Image'}" alt="${blog.title}" class="w-full h-48 object-cover">
@@ -150,18 +164,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderTeamMembers = async () => {
         const teamMembers = await fetchData('team');
+        const allTeam = [...teamMembers, ...localCache.team];
         const container = document.getElementById('team-container');
         const adminList = document.getElementById('admin-team-list');
         container.innerHTML = '';
         adminList.innerHTML = '';
 
-        if (teamMembers.length === 0) {
+        if (allTeam.length === 0) {
             container.innerHTML = '<p class="col-span-full text-center text-gray-500">No team members added yet.</p>';
             adminList.innerHTML = '<p class="text-center text-gray-500">No team members added yet.</p>';
             return;
         }
 
-        teamMembers.forEach(member => {
+        allTeam.forEach(member => {
             const publicHtml = `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
                     <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
@@ -186,6 +201,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             adminList.insertAdjacentHTML('beforeend', adminHtml);
+        });
+    };
+
+    // Events Rendering
+    const renderEvents = async () => {
+        const events = await fetchData('events');
+        const container = document.getElementById('events-container');
+        const adminList = document.getElementById('admin-event-list');
+        if (!container) return;
+        container.innerHTML = '';
+        if (adminList) adminList.innerHTML = '';
+
+        if (events.length === 0) {
+            // Keep static placeholder if present in HTML; otherwise show message
+            const existingStatic = container.querySelector('.card-hover');
+            if (!existingStatic) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No events added yet.</p>';
+            if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No events added yet.</p>';
+            return;
+        }
+
+        events.forEach(evt => {
+            const publicHtml = `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                    <img src="${evt.image || 'https://via.placeholder.com/600x300.png?text=Event'}" alt="${evt.title}" class="w-full h-44 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${evt.title}</h3>
+                        <div class="text-sm text-gray-500 mb-2">${evt.date} · ${evt.location || ''}</div>
+                        <p class="text-gray-600 mb-4">${evt.description || ''}</p>
+                        ${evt.link ? `<a href="${evt.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">Event Page <i class="fas fa-arrow-right ml-2"></i></a>` : ''}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', publicHtml);
+
+            if (adminList) {
+                const adminHtml = `
+                    <div class="admin-list-item">
+                        <span class="text-gray-800 truncate">${evt.title}</span>
+                        <div class="flex items-center">
+                            <button class="edit-event text-blue-500 hover:text-blue-700 mr-2" data-id="${evt.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-event text-red-500 hover:text-red-700" data-id="${evt.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                adminList.insertAdjacentHTML('beforeend', adminHtml);
+            }
         });
     };
 
@@ -236,7 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('.edit-project')) {
             const id = e.target.closest('.edit-project').dataset.id;
             const projects = await fetchData('projects');
-            const projectToEdit = projects.find(p => p.id === id);
+            let projectToEdit = projects.find(p => p.id === id);
+            if (!projectToEdit) projectToEdit = localCache.projects.find(p => p.id === id);
             if (projectToEdit) {
                 currentEditProjectId = id;
                 document.getElementById('modal-project-title').value = projectToEdit.title;
@@ -248,7 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('.delete-project')) {
             const id = e.target.closest('.delete-project').dataset.id;
             if (confirm('Are you sure you want to delete this project?')) {
-                await deleteData('projects', id);
+                try {
+                    await deleteData('projects', id);
+                } catch (err) {
+                    // If server unavailable, remove from local cache
+                    localCache.projects = localCache.projects.filter(p => p.id !== id);
+                }
                 renderProjects();
             }
         }
@@ -263,7 +334,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 image: document.getElementById('modal-project-image').value,
                 link: document.getElementById('modal-project-link').value,
             };
-            await sendJsonData('PUT', `projects/${currentEditProjectId}`, updatedProject);
+            try {
+                await sendJsonData('PUT', `projects/${currentEditProjectId}`, updatedProject);
+            } catch (err) {
+                // Update local cache if present
+                const idx = localCache.projects.findIndex(p => p.id === currentEditProjectId);
+                if (idx !== -1) {
+                    localCache.projects[idx] = { id: currentEditProjectId, ...updatedProject };
+                } else {
+                    // if not present locally, add it so UI reflects change
+                    localCache.projects.push({ id: currentEditProjectId, ...updatedProject });
+                }
+            }
             renderProjects();
             hideModal('edit-project-modal');
         });
@@ -279,7 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('.edit-blog')) {
             const id = e.target.closest('.edit-blog').dataset.id;
             const blogPosts = await fetchData('blogs');
-            const blogToEdit = blogPosts.find(b => b.id === id);
+            let blogToEdit = blogPosts.find(b => b.id === id);
+            if (!blogToEdit) blogToEdit = localCache.blogs.find(b => b.id === id);
             if (blogToEdit) {
                 currentEditBlogId = id;
                 document.getElementById('modal-blog-title').value = blogToEdit.title;
@@ -293,7 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('.delete-blog')) {
             const id = e.target.closest('.delete-blog').dataset.id;
             if (confirm('Are you sure you want to delete this blog post?')) {
-                await deleteData('blogs', id);
+                try {
+                    await deleteData('blogs', id);
+                } catch (err) {
+                    localCache.blogs = localCache.blogs.filter(b => b.id !== id);
+                }
                 renderBlogPosts();
             }
         }
@@ -310,7 +397,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 image: document.getElementById('modal-blog-image').value,
                 link: document.getElementById('modal-blog-link').value,
             };
-            await sendJsonData('PUT', `blogs/${currentEditBlogId}`, updatedBlog);
+            try {
+                await sendJsonData('PUT', `blogs/${currentEditBlogId}`, updatedBlog);
+            } catch (err) {
+                const idx = localCache.blogs.findIndex(b => b.id === currentEditBlogId);
+                if (idx !== -1) {
+                    localCache.blogs[idx] = { id: currentEditBlogId, ...updatedBlog };
+                } else {
+                    localCache.blogs.push({ id: currentEditBlogId, ...updatedBlog });
+                }
+            }
             renderBlogPosts();
             hideModal('edit-blog-modal');
         });
@@ -326,7 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('.edit-team')) {
             const id = e.target.closest('.edit-team').dataset.id;
             const teamMembers = await fetchData('team');
-            const memberToEdit = teamMembers.find(m => m.id === id);
+            let memberToEdit = teamMembers.find(m => m.id === id);
+            if (!memberToEdit) memberToEdit = localCache.team.find(m => m.id === id);
             if (memberToEdit) {
                 currentEditMemberId = id;
                 document.getElementById('member-name').value = memberToEdit.name;
@@ -346,7 +443,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.target.closest('.delete-team')) {
             const id = e.target.closest('.delete-team').dataset.id;
             if (confirm('Are you sure you want to delete this team member?')) {
-                await deleteData('team', id);
+                try {
+                    await deleteData('team', id);
+                } catch (err) {
+                    localCache.team = localCache.team.filter(m => m.id !== id);
+                }
                 renderTeamMembers();
             }
         }
@@ -369,7 +470,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('image', document.getElementById('member-image-url').value);
             }
 
-            await sendFormData('PUT', `team/${currentEditMemberId}`, formData);
+            try {
+                await sendFormData('PUT', `team/${currentEditMemberId}`, formData);
+            } catch (err) {
+                // update local cache
+                const updatedMember = {
+                    id: currentEditMemberId,
+                    name: document.getElementById('member-name').value,
+                    title: document.getElementById('member-title').value,
+                    bio: document.getElementById('member-bio').value,
+                    image: document.getElementById('member-image-url').value || ''
+                };
+                const idx = localCache.team.findIndex(m => m.id === currentEditMemberId);
+                if (idx !== -1) localCache.team[idx] = updatedMember; else localCache.team.push(updatedMember);
+            }
             renderTeamMembers();
             hideModal('edit-team-modal');
         });
@@ -387,7 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
             image: document.getElementById('blog-image').value,
             link: document.getElementById('blog-link').value
         };
-        await sendJsonData('POST', 'blogs', newBlog);
+        try {
+            await sendJsonData('POST', 'blogs', newBlog);
+        } catch (err) {
+            // Server unavailable — store locally and render
+            const id = generateId('blog-');
+            localCache.blogs.push({ id, ...newBlog });
+        }
         renderBlogPosts();
         e.target.reset();
     });
@@ -404,8 +524,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (imageFile) {
             formData.append('image', imageFile);
         }
-
-        await sendFormData('POST', 'team', formData);
+        try {
+            await sendFormData('POST', 'team', formData);
+        } catch (err) {
+            // Create a local preview object if server not available
+            const name = document.getElementById('new-member-name').value;
+            const title = document.getElementById('new-member-title').value;
+            const bio = document.getElementById('new-member-bio').value;
+            const id = generateId('team-');
+            // If an image file was provided, create an object URL for preview
+            let imageUrl = '';
+            if (imageFile) {
+                try { imageUrl = URL.createObjectURL(imageFile); } catch (e) { imageUrl = ''; }
+            }
+            localCache.team.push({ id, name, title, bio, image: imageUrl });
+        }
         renderTeamMembers();
         e.target.reset();
     });
@@ -418,10 +551,80 @@ document.addEventListener('DOMContentLoaded', () => {
             image: document.getElementById('project-image').value,
             link: document.getElementById('project-link').value
         };
-        await sendJsonData('POST', 'projects', newProject);
+        try {
+            await sendJsonData('POST', 'projects', newProject);
+        } catch (err) {
+            const id = generateId('project-');
+            localCache.projects.push({ id, ...newProject });
+        }
         renderProjects();
         e.target.reset();
     });
+
+    // Event Upload Form
+    const eventUploadForm = document.getElementById('event-upload-form');
+    if (eventUploadForm) {
+        eventUploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('title', document.getElementById('event-title').value);
+            formData.append('date', document.getElementById('event-date').value);
+            formData.append('location', document.getElementById('event-location').value);
+            formData.append('description', document.getElementById('event-description').value);
+            formData.append('link', document.getElementById('event-link').value);
+
+            const imageFile = document.getElementById('event-image').files[0];
+            if (imageFile) formData.append('image', imageFile);
+            try {
+                await sendFormData('POST', 'events', formData);
+            } catch (err) {
+                const id = generateId('event-');
+                let imageUrl = '';
+                if (imageFile) {
+                    try { imageUrl = URL.createObjectURL(imageFile); } catch (e) { imageUrl = ''; }
+                }
+                localCache.events.push({ id, title: document.getElementById('event-title').value, date: document.getElementById('event-date').value, location: document.getElementById('event-location').value, description: document.getElementById('event-description').value, link: document.getElementById('event-link').value, image: imageUrl });
+            }
+            renderEvents();
+            e.target.reset();
+        });
+    }
+
+    // Admin event list actions (edit/delete)
+    const adminEventList = document.getElementById('admin-event-list');
+    if (adminEventList) {
+        adminEventList.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-event')) {
+                const id = e.target.closest('.delete-event').dataset.id;
+                if (confirm('Are you sure you want to delete this event?')) {
+                    try {
+                        await deleteData('events', id);
+                    } catch (err) {
+                        localCache.events = localCache.events.filter(ev => ev.id !== id);
+                    }
+                    renderEvents();
+                }
+            } else if (e.target.closest('.edit-event')) {
+                // Simple inline edit could be implemented, but for now prompt for basic edits
+                const id = e.target.closest('.edit-event').dataset.id;
+                const events = await fetchData('events');
+                let evt = events.find(ev => ev.id === id);
+                if (!evt) evt = localCache.events.find(ev => ev.id === id);
+                if (!evt) return;
+                const newTitle = prompt('Edit event title:', evt.title);
+                if (newTitle === null) return; // cancel
+                const updated = { ...evt, title: newTitle };
+                try {
+                    await sendJsonData('PUT', `events/${id}`, updated);
+                } catch (err) {
+                    const idx = localCache.events.findIndex(ev => ev.id === id);
+                    if (idx !== -1) localCache.events[idx] = { id, ...updated };
+                    else localCache.events.push({ id, ...updated });
+                }
+                renderEvents();
+            }
+        });
+    }
 
     // --- Other Functionality ---
 
@@ -461,4 +664,5 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProjects();
     renderBlogPosts();
     renderTeamMembers();
+    renderEvents();
 });

@@ -145,6 +145,83 @@ app.get('/api/team', async (req, res) => {
     }
 });
 
+// Events
+app.get('/api/events', async (req, res) => {
+    try {
+        const events = await getCollection('events');
+        res.json(events);
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+});
+
+app.post('/api/events', upload.single('image'), async (req, res) => {
+    try {
+        const newEvent = req.body;
+
+        if (req.file) {
+            const fileName = `events/${Date.now()}-${req.file.originalname}`;
+            const file = bucket.file(fileName);
+            await file.save(req.file.buffer, {
+                metadata: {
+                    contentType: req.file.mimetype,
+                },
+            });
+            const [url] = await file.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491',
+            });
+            newEvent.image = url;
+        }
+
+        const docRef = await db.collection('events').add(newEvent);
+        res.status(201).json({ id: docRef.id, ...newEvent });
+    } catch (error) {
+        console.error('Error adding event:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+});
+
+app.put('/api/events/:id', upload.single('image'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedEvent = req.body;
+
+        if (req.file) {
+            const fileName = `events/${Date.now()}-${req.file.originalname}`;
+            const file = bucket.file(fileName);
+            await file.save(req.file.buffer, {
+                metadata: {
+                    contentType: req.file.mimetype,
+                },
+            });
+            const [url] = await file.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491',
+            });
+            updatedEvent.image = url;
+        }
+
+        await db.collection('events').doc(id).update(updatedEvent);
+        res.json({ id, ...updatedEvent });
+    } catch (error) {
+        console.error('Error updating event:', error);
+        res.status(404).json({ message: 'Event not found', error: error.message });
+    }
+});
+
+app.delete('/api/events/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.collection('events').doc(id).delete();
+        res.status(200).json({ message: 'Event deleted' });
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        res.status(404).json({ message: 'Event not found', error: error.message });
+    }
+});
+
 app.post('/api/team', upload.single('image'), async (req, res) => {
     try {
         const newMember = req.body;
