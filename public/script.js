@@ -1,176 +1,124 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. API COMMUNICATION HELPERS ---
+    // --- 1. CORE API UTILITIES ---
+    // Uses JSON instead of FormData to bypass Storage billing issues
     const fetchData = async (endpoint) => {
         try {
             const response = await fetch(`/api/${endpoint}`);
-            if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
         } catch (error) {
-            console.error(`Failed to fetch ${endpoint}:`, error);
+            console.error(`Error fetching ${endpoint}:`, error);
             return [];
         }
     };
 
-    const sendFormData = async (method, endpoint, formData) => {
-        try {
-            const response = await fetch(`/api/${endpoint}`, {
-                method: method,
-                body: formData
-            });
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
-        } catch (error) {
-            console.error(`Failed to ${method} ${endpoint}:`, error);
-            throw error;
-        }
-    };
-
-    const deleteData = async (endpoint, id) => {
-        try {
-            const response = await fetch(`/api/${endpoint}/${id}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
-        } catch (error) {
-            console.error(`Failed to delete ${endpoint}:`, error);
-            throw error;
-        }
-    };
-
-    // --- 2. RENDERING FUNCTIONS ---
-    
-    const renderProjects = async () => {
-        const projects = await fetchData('projects');
-        const container = document.getElementById('projects-container');
-        const adminList = document.getElementById('admin-project-list');
-        if (!container) return;
-
-        container.innerHTML = '';
-        if (adminList) adminList.innerHTML = '';
-
-        projects.forEach(project => {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
-                    <img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">${project.title}</h3>
-                        <p class="text-gray-600 mb-4">${project.description}</p>
-                        <a href="${project.link}" target="_blank" class="inline-flex items-center px-4 py-2 text-white bg-[#00acc1] rounded-md">View Project</a>
-                    </div>
-                </div>`);
-            if (adminList) {
-                adminList.insertAdjacentHTML('beforeend', `
-                    <div class="admin-list-item flex justify-between p-2 border-b">
-                        <span>${project.title}</span>
-                        <button class="delete-project text-red-500" data-id="${project.id}"><i class="fas fa-trash"></i></button>
-                    </div>`);
-            }
+    const sendData = async (method, endpoint, data) => {
+        const response = await fetch(`/api/${endpoint}`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
         });
+        if (!response.ok) throw new Error('Action failed');
+        return await response.json();
     };
 
-    const renderTeamMembers = async () => {
-        const teamMembers = await fetchData('team');
-        const container = document.getElementById('team-container');
-        const adminList = document.getElementById('admin-team-list');
-        if (!container) return;
-
-        container.innerHTML = '';
-        if (adminList) adminList.innerHTML = '';
-
-        teamMembers.forEach(member => {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
-                    <img src="${member.image || 'https://via.placeholder.com/150'}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
-                    <p class="text-[#00acc1] font-medium">${member.title}</p>
-                    <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
-                </div>`);
-            if (adminList) {
-                adminList.insertAdjacentHTML('beforeend', `
-                    <div class="admin-list-item flex justify-between p-2 border-b">
-                        <span>${member.name}</span>
-                        <button class="delete-team text-red-500" data-id="${member.id}"><i class="fas fa-trash"></i></button>
-                    </div>`);
-            }
-        });
-    };
-
-    // --- 3. ADMIN PANEL & MODAL LOGIC ---
-    
+    // --- 2. ADMIN PANEL TOGGLE ---
     const adminToggle = document.getElementById('admin-toggle');
     const adminPanel = document.getElementById('admin-panel');
     const closeAdmin = document.getElementById('close-admin');
 
     if (adminToggle) {
-        adminToggle.addEventListener('click', () => {
-            adminPanel.classList.toggle('open');
-            console.log("Admin Panel Toggled");
-        });
+        adminToggle.addEventListener('click', () => adminPanel.classList.add('open'));
     }
-
     if (closeAdmin) {
         closeAdmin.addEventListener('click', () => adminPanel.classList.remove('open'));
     }
 
-    // Modal helpers
-    const showModal = (id) => document.getElementById(id).classList.remove('hidden');
-    const hideModal = (id) => document.getElementById(id).classList.add('hidden');
+    // --- 3. TEAM MEMBER LOGIC (URL BASED) ---
+    const renderTeam = async () => {
+        const team = await fetchData('team');
+        const container = document.getElementById('team-container');
+        if (!container) return;
+        container.innerHTML = '';
 
-    // --- 4. FORM SUBMISSIONS (CREATE DATA) ---
+        team.forEach(member => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center card-hover">
+                    <img src="${member.image}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]" 
+                         onerror="this.src='https://via.placeholder.com/150'">
+                    <h3 class="text-xl font-bold text-gray-900">${member.name}</h3>
+                    <p class="text-[#00acc1] font-medium">${member.title}</p>
+                    <p class="text-gray-600 text-sm mt-2">${member.bio}</p>
+                </div>
+            `);
+        });
+    };
 
-    // Add Project
-    const addProjectForm = document.getElementById('add-project-form');
-    if (addProjectForm) {
-        addProjectForm.addEventListener('submit', async (e) => {
+    const teamForm = document.getElementById('edit-team-form');
+    if (teamForm) {
+        teamForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(addProjectForm);
+            const memberData = {
+                name: document.getElementById('member-name').value,
+                title: document.getElementById('member-title').value,
+                bio: document.getElementById('member-bio').value,
+                image: document.getElementById('member-image-url-input').value // From the new text input
+            };
+
             try {
-                await sendFormData('POST', 'projects', formData);
-                addProjectForm.reset();
-                renderProjects();
-                alert("Project added successfully!");
-            } catch (err) { alert("Failed to add project"); }
+                await sendData('POST', 'team', memberData);
+                alert("Team member added successfully!");
+                teamForm.reset();
+                renderTeam();
+            } catch (err) {
+                alert("Error saving team member. Check Firestore rules.");
+            }
         });
     }
 
-    // Add Team Member
-    const addTeamForm = document.getElementById('add-team-member-form');
-    if (addTeamForm) {
-        addTeamForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(addTeamForm);
-            // Manually append if your IDs don't match the database fields exactly
-            // formData.append('name', document.getElementById('new-member-name').value);
-            try {
-                await sendFormData('POST', 'team', formData);
-                addTeamForm.reset();
-                renderTeamMembers();
-                alert("Officer added!");
-            } catch (err) { alert("Failed to add officer"); }
+    // --- 4. PROJECTS & BLOGS LOGIC ---
+    const renderProjects = async () => {
+        const projects = await fetchData('projects');
+        const container = document.getElementById('projects-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        projects.forEach(project => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${project.image}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/400x200'">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg">${project.title}</h3>
+                        <p class="text-gray-600 text-sm">${project.description}</p>
+                    </div>
+                </div>
+            `);
         });
-    }
+    };
 
-    // --- 5. DELETE LISTENERS ---
-    document.addEventListener('click', async (e) => {
-        const deleteBtn = e.target.closest('button');
-        if (!deleteBtn) return;
+    // --- 5. EVENTS LOGIC ---
+    const renderEvents = async () => {
+        const events = await fetchData('events');
+        const container = document.getElementById('events-container');
+        if (!container) return;
+        container.innerHTML = '';
 
-        const id = deleteBtn.dataset.id;
-        if (deleteBtn.classList.contains('delete-project')) {
-            if (confirm("Delete Project?")) {
-                await deleteData('projects', id);
-                renderProjects();
-            }
-        }
-        if (deleteBtn.classList.contains('delete-team')) {
-            if (confirm("Delete Officer?")) {
-                await deleteData('team', id);
-                renderTeamMembers();
-            }
-        }
-    });
+        events.forEach(event => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="border-l-4 border-[#00acc1] bg-white p-4 shadow-sm">
+                    <h4 class="font-bold">${event.name}</h4>
+                    <p class="text-sm text-gray-500">${event.date}</p>
+                    <p class="text-gray-700">${event.description}</p>
+                </div>
+            `);
+        });
+    };
 
-    // --- 6. INITIALIZATION ---
-    renderProjects();
-    renderTeamMembers();
-    renderBlogPosts(); 
+    // --- 6. INITIALIZE EVERYTHING ---
+    const init = () => {
+        renderTeam();
+        renderProjects();
+        renderEvents();
+    };
+
+    init();
 });
