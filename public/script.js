@@ -1,124 +1,108 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. CORE API UTILITIES ---
-    // Uses JSON instead of FormData to bypass Storage billing issues
-    const fetchData = async (endpoint) => {
-        try {
-            const response = await fetch(`/api/${endpoint}`);
-            return await response.json();
-        } catch (error) {
-            console.error(`Error fetching ${endpoint}:`, error);
-            return [];
-        }
+    // --- 1. INITIALIZATION & UI ---
+    const adminPanel = document.getElementById('admin-panel');
+    const adminToggle = document.getElementById('admin-toggle');
+    const closeAdmin = document.getElementById('close-admin');
+
+    if (adminToggle) adminToggle.onclick = () => adminPanel.classList.add('open');
+    if (closeAdmin) closeAdmin.onclick = () => adminPanel.classList.remove('open');
+
+    // --- 2. TEAM MANAGEMENT ---
+    const teamForm = document.getElementById('team-member-form');
+    const adminTeamList = document.getElementById('admin-team-list');
+    const teamContainer = document.getElementById('team-container');
+
+    const renderTeam = async () => {
+        const res = await fetch('/api/team');
+        const team = await res.json();
+        
+        if (teamContainer) teamContainer.innerHTML = '';
+        if (adminTeamList) adminTeamList.innerHTML = '';
+
+        team.forEach(member => {
+            // Main Website UI
+            if (teamContainer) {
+                teamContainer.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white rounded-lg shadow-lg p-6 text-center card-hover">
+                        <img src="${member.image}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]" onerror="this.src='https://via.placeholder.com/150'">
+                        <h3 class="text-xl font-bold">${member.name}</h3>
+                        <p class="text-[#00acc1]">${member.title}</p>
+                        <p class="text-sm text-gray-600 mt-2">${member.bio}</p>
+                    </div>
+                `);
+            }
+
+            // Admin List UI
+            if (adminTeamList) {
+                adminTeamList.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-between items-center p-2 bg-gray-50 border rounded">
+                        <span class="font-medium">${member.name}</span>
+                        <div class="flex space-x-2">
+                            <button onclick="editTeamMember('${member.id}', '${encodeURIComponent(JSON.stringify(member))}')" class="text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItem('team', '${member.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `);
+            }
+        });
     };
 
-    const sendData = async (method, endpoint, data) => {
-        const response = await fetch(`/api/${endpoint}`, {
+    teamForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-member-id').value;
+        const data = {
+            name: document.getElementById('member-name').value,
+            title: document.getElementById('member-title').value,
+            bio: document.getElementById('member-bio').value,
+            image: document.getElementById('member-image-url').value
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/team/${id}` : '/api/team';
+
+        await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (!response.ok) throw new Error('Action failed');
-        return await response.json();
-    };
 
-    // --- 2. ADMIN PANEL TOGGLE ---
-    const adminToggle = document.getElementById('admin-toggle');
-    const adminPanel = document.getElementById('admin-panel');
-    const closeAdmin = document.getElementById('close-admin');
-
-    if (adminToggle) {
-        adminToggle.addEventListener('click', () => adminPanel.classList.add('open'));
-    }
-    if (closeAdmin) {
-        closeAdmin.addEventListener('click', () => adminPanel.classList.remove('open'));
-    }
-
-    // --- 3. TEAM MEMBER LOGIC (URL BASED) ---
-    const renderTeam = async () => {
-        const team = await fetchData('team');
-        const container = document.getElementById('team-container');
-        if (!container) return;
-        container.innerHTML = '';
-
-        team.forEach(member => {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="bg-white rounded-lg shadow-lg p-6 text-center card-hover">
-                    <img src="${member.image}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]" 
-                         onerror="this.src='https://via.placeholder.com/150'">
-                    <h3 class="text-xl font-bold text-gray-900">${member.name}</h3>
-                    <p class="text-[#00acc1] font-medium">${member.title}</p>
-                    <p class="text-gray-600 text-sm mt-2">${member.bio}</p>
-                </div>
-            `);
-        });
-    };
-
-    const teamForm = document.getElementById('edit-team-form');
-    if (teamForm) {
-        teamForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const memberData = {
-                name: document.getElementById('member-name').value,
-                title: document.getElementById('member-title').value,
-                bio: document.getElementById('member-bio').value,
-                image: document.getElementById('member-image-url-input').value // From the new text input
-            };
-
-            try {
-                await sendData('POST', 'team', memberData);
-                alert("Team member added successfully!");
-                teamForm.reset();
-                renderTeam();
-            } catch (err) {
-                alert("Error saving team member. Check Firestore rules.");
-            }
-        });
-    }
-
-    // --- 4. PROJECTS & BLOGS LOGIC ---
-    const renderProjects = async () => {
-        const projects = await fetchData('projects');
-        const container = document.getElementById('projects-container');
-        if (!container) return;
-        container.innerHTML = '';
-
-        projects.forEach(project => {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="${project.image}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/400x200'">
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg">${project.title}</h3>
-                        <p class="text-gray-600 text-sm">${project.description}</p>
-                    </div>
-                </div>
-            `);
-        });
-    };
-
-    // --- 5. EVENTS LOGIC ---
-    const renderEvents = async () => {
-        const events = await fetchData('events');
-        const container = document.getElementById('events-container');
-        if (!container) return;
-        container.innerHTML = '';
-
-        events.forEach(event => {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="border-l-4 border-[#00acc1] bg-white p-4 shadow-sm">
-                    <h4 class="font-bold">${event.name}</h4>
-                    <p class="text-sm text-gray-500">${event.date}</p>
-                    <p class="text-gray-700">${event.description}</p>
-                </div>
-            `);
-        });
-    };
-
-    // --- 6. INITIALIZE EVERYTHING ---
-    const init = () => {
+        teamForm.reset();
+        document.getElementById('edit-member-id').value = '';
         renderTeam();
-        renderProjects();
-        renderEvents();
     };
 
-    init();
-});
+    // --- 3. PROJECT MANAGEMENT ---
+    const projectForm = document.getElementById('edit-project-form');
+    
+    window.editProject = (id, title, desc, img, link) => {
+        document.getElementById('modal-project-id').value = id;
+        document.getElementById('modal-project-title').value = title;
+        document.getElementById('modal-project-description').value = desc;
+        document.getElementById('modal-project-image').value = img;
+        document.getElementById('modal-project-link').value = link;
+        document.getElementById('edit-project-modal').classList.remove('hidden');
+        document.getElementById('delete-project-modal-btn').classList.remove('hidden');
+    };
+
+    // --- 4. GLOBAL ACTIONS ---
+    window.editTeamMember = (id, encodedData) => {
+        const member = JSON.parse(decodeURIComponent(encodedData));
+        document.getElementById('edit-member-id').value = id;
+        document.getElementById('member-name').value = member.name;
+        document.getElementById('member-title').value = member.title;
+        document.getElementById('member-bio').value = member.bio;
+        document.getElementById('member-image-url').value = member.image;
+        document.getElementById('team-submit-btn').innerText = "Update Member";
+        document.getElementById('cancel-team-edit').classList.remove('hidden');
+    };
+
+    window.deleteItem = async (type, id) => {
+        if (confirm(`Are you sure you want to delete this ${type}?`)) {
+            await fetch(`/api/${type}/${id}`, { method: 'DELETE' });
+            location.reload();
+        }
+    };
+
+    // Initial Load
+    renderTeam();
+}); 
