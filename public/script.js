@@ -185,19 +185,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderTeamMembers = async () => {
-        const teamMembers = await fetchData('team');
-        const allTeam = [...teamMembers, ...localCache.team];
-        const container = document.getElementById('team-container');
-        const adminList = document.getElementById('admin-team-list');
-        container.innerHTML = '';
-        adminList.innerHTML = '';
+const renderTeamMembers = async () => {
+    const teamMembers = await fetchData('team');
+    // REMOVED localCache merge so we only see real Firebase data
+    const container = document.getElementById('team-container');
+    const adminList = document.getElementById('admin-team-list');
+    
+    container.innerHTML = '';
+    if (adminList) adminList.innerHTML = '';
 
-        if (allTeam.length === 0) {
-            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No team members added yet.</p>';
-            adminList.innerHTML = '<p class="text-center text-gray-500">No team members added yet.</p>';
-            return;
+    if (teamMembers.length === 0) {
+        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No officers found in database.</p>';
+        if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No team members added yet.</p>';
+        return;
+    }
+
+    teamMembers.forEach(member => {
+        const publicHtml = `
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                <img src="${member.image || 'https://via.placeholder.com/150'}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
+                <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
+                <p class="text-[#00acc1] font-medium">${member.title}</p>
+                <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', publicHtml);
+
+        if (adminList) {
+            const adminHtml = `
+                <div class="admin-list-item">
+                    <span class="text-gray-800 truncate">${member.name}</span>
+                    <div class="flex items-center">
+                        <button class="edit-team text-blue-500 hover:text-blue-700 mr-2" data-id="${member.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-team text-red-500 hover:text-red-700" data-id="${member.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>`;
+            adminList.insertAdjacentHTML('beforeend', adminHtml);
         }
+    });
+};
 
         allTeam.forEach(member => {
             const publicHtml = `
@@ -491,17 +520,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Team Modal Logic
+// --- Updated Team Modal Logic (Firebase Connected) ---
     const editTeamModal = document.getElementById('edit-team-modal');
     setupModalCloseHandlers('edit-team-modal');
     const editTeamForm = document.getElementById('edit-team-form');
     let currentEditMemberId = null;
 
     document.getElementById('admin-team-list').addEventListener('click', async (e) => {
-        if (e.target.closest('.edit-team')) {
-            const id = e.target.closest('.edit-team').dataset.id;
+        const editBtn = e.target.closest('.edit-team');
+        const deleteBtn = e.target.closest('.delete-team');
+
+        if (editBtn) {
+            const id = editBtn.dataset.id;
             const teamMembers = await fetchData('team');
-            let memberToEdit = teamMembers.find(m => m.id === id);
-            if (!memberToEdit) memberToEdit = localCache.team.find(m => m.id === id);
+            const memberToEdit = teamMembers.find(m => m.id === id);
+            
             if (memberToEdit) {
                 currentEditMemberId = id;
                 document.getElementById('member-name').value = memberToEdit.name;
@@ -509,51 +542,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('member-bio').value = memberToEdit.bio;
 
                 // Store current image URL and show a preview
-                document.getElementById('member-image-url').value = memberToEdit.image;
+                document.getElementById('member-image-url').value = memberToEdit.image || '';
                 const imagePreview = document.getElementById('current-image-preview');
-                imagePreview.innerHTML = memberToEdit.image ? `<img src="${memberToEdit.image}" class="w-16 h-16 object-cover rounded-full mt-2" alt="Current Profile Image">` : 'No current image.';
+                imagePreview.innerHTML = memberToEdit.image ? 
+                    `<img src="${memberToEdit.image}" class="w-16 h-16 object-cover rounded-full mt-2" alt="Current Profile Image">` : 
+                    'No current image.';
 
                 // Clear file input on modal open
                 document.getElementById('member-image-file').value = '';
-
                 showModal('edit-team-modal');
             }
-        } else if (e.target.closest('.delete-team')) {
-            const id = e.target.closest('.delete-team').dataset.id;
-            if (confirm('Are you sure you want to delete this team member?')) {
-                // Optimistically remove item from UI/local cache immediately
-                localCache.team = localCache.team.filter(m => m.id !== id);
-                // Remove the admin list item DOM node for immediate feedback
-                const listItem = e.target.closest('.admin-list-item');
-                if (listItem) listItem.remove();
-                renderTeamMembers();
-
-                // Attempt server delete in background; if it fails, log but UI already updated
+        } else if (deleteBtn) {
+            const id = deleteBtn.dataset.id;
+            if (confirm('Are you sure you want to delete this officer permanently from Firebase?')) {
                 try {
                     await deleteData('team', id);
-                    showMessage('Team member deleted.', false, 2500);
+                    showMessage('Officer deleted successfully.');
+                    // Re-render immediately from Firebase
+                    renderTeamMembers();
                 } catch (err) {
-                    console.warn('Server delete failed for team id', id, err);
-                    // If the id looks like a local-only id (starts with our prefix) or delete failed,
-                    // try to find a matching server-side record by name and delete that.
-                    try {
-                        const listItemName = listItem ? (listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '') : '';
-                        if (listItemName) {
-                            const serverMembers = await fetchData('team');
-                            const match = serverMembers.find(m => (m.name || '').trim() === listItemName);
-                            if (match) {
-                                try {
-                                    await deleteData('team', match.id);
-                                    console.log('Deleted server-side team member by name match:', match.id);
-                                    showMessage('Team member deleted (matched by name).', false, 2500);
-                                } catch (deleteErr) {
-                                    console.error('Failed to delete matched server-side team member', match.id, deleteErr);
-                                }
-                            }
-                        }
-                    } catch (lookupErr) {
-                        console.error('Failed to lookup server-side team members for deletion', lookupErr);
-                    }
+                    console.error('Delete failed', err);
+                    showMessage('Failed to delete from server.', true);
                 }
             }
         }
@@ -572,26 +581,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (imageFile) {
                 formData.append('image', imageFile);
             } else {
-                // If no new file, send the existing URL
                 formData.append('image', document.getElementById('member-image-url').value);
             }
 
             try {
+                // This sends the data to your server.js which updates Firebase
                 await sendFormData('PUT', `team/${currentEditMemberId}`, formData);
+                showMessage('Changes saved to Firebase!');
+                hideModal('edit-team-modal');
+                // Force a re-fetch of the data so we know it saved correctly
+                renderTeamMembers();
             } catch (err) {
-                // update local cache
-                const updatedMember = {
-                    id: currentEditMemberId,
-                    name: document.getElementById('member-name').value,
-                    title: document.getElementById('member-title').value,
-                    bio: document.getElementById('member-bio').value,
-                    image: document.getElementById('member-image-url').value || ''
-                };
-                const idx = localCache.team.findIndex(m => m.id === currentEditMemberId);
-                if (idx !== -1) localCache.team[idx] = updatedMember; else localCache.team.push(updatedMember);
+                console.error('Update failed', err);
+                showMessage('Error: Could not save to Firebase.', true);
             }
-            renderTeamMembers();
-            hideModal('edit-team-modal');
         });
     }
 
@@ -618,37 +621,25 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.reset();
     });
 
-    document.getElementById('add-team-member-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
+document.getElementById('add-team-member-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', document.getElementById('new-member-name').value);
+    formData.append('title', document.getElementById('new-member-title').value);
+    formData.append('bio', document.getElementById('new-member-bio').value);
+    
+    const imageFile = document.getElementById('new-member-image').files[0];
+    if (imageFile) formData.append('image', imageFile);
 
-        const formData = new FormData();
-        formData.append('name', document.getElementById('new-member-name').value);
-        formData.append('title', document.getElementById('new-member-title').value);
-        formData.append('bio', document.getElementById('new-member-bio').value);
-        
-        const imageFile = document.getElementById('new-member-image').files[0];
-        if (imageFile) {
-            formData.append('image', imageFile);
-        }
-        try {
-            await sendFormData('POST', 'team', formData);
-        } catch (err) {
-            // Create a local preview object if server not available
-            const name = document.getElementById('new-member-name').value;
-            const title = document.getElementById('new-member-title').value;
-            const bio = document.getElementById('new-member-bio').value;
-            const id = generateId('team-');
-            // If an image file was provided, create an object URL for preview
-            let imageUrl = '';
-            if (imageFile) {
-                try { imageUrl = URL.createObjectURL(imageFile); } catch (e) { imageUrl = ''; }
-            }
-            localCache.team.push({ id, name, title, bio, image: imageUrl });
-        }
+    try {
+        await sendFormData('POST', 'team', formData);
+        showMessage('New officer added to Firebase!');
         renderTeamMembers();
         e.target.reset();
-    });
-
+    } catch (err) {
+        showMessage('Failed to add officer', true);
+    }
+});
     document.getElementById('project-upload-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newProject = {
