@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- API Call Functions (Communicating with server.js) ---
+    // --- Helper Functions ---
     const fetchData = async (endpoint) => {
         try {
             const response = await fetch(`/api/${endpoint}`);
@@ -8,11 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return await response.json();
         } catch (error) {
             console.error(`Failed to fetch ${endpoint}:`, error);
-            return []; // Return empty array on error
+            return [];
         }
     };
-
-    const localCache = { projects: [], blogs: [], team: [], events: [] };
 
     const showMessage = (msg, isError = false, timeout = 3000) => {
         try {
@@ -40,13 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/${endpoint}`, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify(data)
             });
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
-        } catch (error) {
-            console.error(`Failed to ${method.toLowerCase()} ${endpoint}:`, error);
-            throw error;
+        } catch (err) {
+            console.error(`Failed to ${method} ${endpoint}`, err);
+            throw err;
         }
     };
 
@@ -54,13 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/api/${endpoint}`, {
                 method,
-                body: formData,
+                body: formData
             });
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
-        } catch (error) {
-            console.error(`Failed to ${method.toLowerCase()} ${endpoint}:`, error);
-            throw error;
+        } catch (err) {
+            console.error(`Failed to ${method} ${endpoint}`, err);
+            throw err;
         }
     };
 
@@ -69,233 +67,231 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/${endpoint}/${id}`, { method: 'DELETE' });
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
-        } catch (error) {
-            console.error(`Failed to delete ${endpoint}:`, error);
-            throw error;
+        } catch (err) {
+            console.error(`Failed to delete ${endpoint}:`, err);
+            throw err;
         }
     };
+
+    const localCache = { projects: [], blogs: [], team: [], events: [] };
+
+    // --- Safe Element Helper ---
+    const getSafe = (id) => document.getElementById(id);
 
     // --- Render Functions ---
     const renderProjects = async () => {
-        const projects = await fetchData('projects');
-        const container = document.getElementById('projects-container');
-        const adminList = document.getElementById('admin-project-list');
-        container.innerHTML = '';
-        adminList.innerHTML = '';
-        const allProjects = [...projects, ...localCache.projects];
-        if (allProjects.length === 0) {
-            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No projects added yet.</p>';
-            adminList.innerHTML = '<p class="text-center text-gray-500">No projects added yet.</p>';
-            return;
-        }
-        allProjects.forEach(project => {
-            const publicHtml = `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
-                    <img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">${project.title}</h3>
-                        <p class="text-gray-600 mb-4">${project.description}</p>
-                        <a href="${project.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
-                            View Project <i class="fas fa-arrow-right ml-2"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', publicHtml);
+        try {
+            const container = getSafe('projects-container');
+            const adminList = getSafe('admin-project-list');
+            if (!container && !adminList) return;
 
-            const adminHtml = `
-                <div class="admin-list-item">
-                    <span class="text-gray-800 truncate">${project.title}</span>
-                    <div class="flex items-center">
-                        <button class="edit-project text-blue-500 hover:text-blue-700 mr-2" data-id="${project.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-project text-red-500 hover:text-red-700" data-id="${project.id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            adminList.insertAdjacentHTML('beforeend', adminHtml);
-        });
+            const projects = await fetchData('projects');
+            const allProjects = [...projects, ...localCache.projects];
+
+            if (container) container.innerHTML = '';
+            if (adminList) adminList.innerHTML = '';
+
+            if (allProjects.length === 0) {
+                if (container) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No projects added yet.</p>';
+                if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No projects added yet.</p>';
+                return;
+            }
+
+            allProjects.forEach(project => {
+                if (container) {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                            <img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover">
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">${project.title}</h3>
+                                <p class="text-gray-600 mb-4">${project.description}</p>
+                                <a href="${project.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                                    View Project <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `);
+                }
+                if (adminList) {
+                    adminList.insertAdjacentHTML('beforeend', `
+                        <div class="admin-list-item">
+                            <span class="text-gray-800 truncate">${project.title}</span>
+                            <div class="flex items-center">
+                                <button class="edit-project text-blue-500 hover:text-blue-700 mr-2" data-id="${project.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-project text-red-500 hover:text-red-700" data-id="${project.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+        } catch (err) {
+            console.error('renderProjects failed', err);
+        }
     };
 
     const renderBlogPosts = async () => {
-        const blogPosts = await fetchData('blogs');
-        const container = document.getElementById('blog-posts-container');
-        const adminList = document.getElementById('admin-blog-list');
-        container.innerHTML = '';
-        adminList.innerHTML = '';
-        const allBlogs = [...blogPosts, ...localCache.blogs];
-        if (allBlogs.length === 0) {
-            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No blog posts added yet.</p>';
-            adminList.innerHTML = '<p class="text-center text-gray-500">No blog posts added yet.</p>';
-            return;
-        }
-        allBlogs.forEach(blog => {
-            const publicHtml = `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
-                    <img src="${blog.image || 'https://via.placeholder.com/400x250.png?text=No+Image'}" alt="${blog.title}" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <span class="text-sm text-gray-500">${blog.date} | ${blog.category}</span>
-                        <h3 class="text-xl font-bold text-gray-900 my-2">${blog.title}</h3>
-                        <p class="text-gray-600">${blog.excerpt}</p>
-                        <a href="${blog.link}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
-                            Read More <i class="fas fa-arrow-right ml-2"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', publicHtml);
+        try {
+            const container = getSafe('blog-posts-container');
+            const adminList = getSafe('admin-blog-list');
+            if (!container && !adminList) return;
 
-            const adminHtml = `
-                <div class="admin-list-item">
-                    <span class="text-gray-800 truncate">${blog.title}</span>
-                    <div class="flex items-center">
-                        <button class="edit-blog text-blue-500 hover:text-blue-700 mr-2" data-id="${blog.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-blog text-red-500 hover:text-red-700" data-id="${blog.id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            adminList.insertAdjacentHTML('beforeend', adminHtml);
-        });
+            const blogPosts = await fetchData('blogs');
+            const allBlogs = [...blogPosts, ...localCache.blogs];
+            if (container) container.innerHTML = '';
+            if (adminList) adminList.innerHTML = '';
+
+            if (allBlogs.length === 0) {
+                if (container) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No blog posts added yet.</p>';
+                if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No blog posts added yet.</p>';
+                return;
+            }
+
+            allBlogs.forEach(blog => {
+                if (container) {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                            <img src="${blog.image || 'https://via.placeholder.com/400x250.png?text=No+Image'}" alt="${blog.title}" class="w-full h-48 object-cover">
+                            <div class="p-6">
+                                <span class="text-sm text-gray-500">${blog.date} | ${blog.category}</span>
+                                <h3 class="text-xl font-bold text-gray-900 my-2">${blog.title}</h3>
+                                <p class="text-gray-600">${blog.excerpt}</p>
+                                <a href="${blog.link}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                                    Read More <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `);
+                }
+                if (adminList) {
+                    adminList.insertAdjacentHTML('beforeend', `
+                        <div class="admin-list-item">
+                            <span class="text-gray-800 truncate">${blog.title}</span>
+                            <div class="flex items-center">
+                                <button class="edit-blog text-blue-500 hover:text-blue-700 mr-2" data-id="${blog.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-blog text-red-500 hover:text-red-700" data-id="${blog.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+        } catch (err) {
+            console.error('renderBlogPosts failed', err);
+        }
     };
 
     const renderTeamMembers = async () => {
-        const teamMembers = await fetchData('team');
-        const allTeam = [...teamMembers, ...localCache.team];
-        const container = document.getElementById('team-container');
-        const adminList = document.getElementById('admin-team-list');
-        container.innerHTML = '';
-        adminList.innerHTML = '';
-        if (allTeam.length === 0) {
-            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No team members added yet.</p>';
-            adminList.innerHTML = '<p class="text-center text-gray-500">No team members added yet.</p>';
-            return;
-        }
-        allTeam.forEach(member => {
-            const publicHtml = `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
-                    <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
-                    <p class="text-[#00acc1] font-medium">${member.title}</p>
-                    <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', publicHtml);
+        try {
+            const container = getSafe('team-container');
+            const adminList = getSafe('admin-team-list');
+            if (!container && !adminList) return;
 
-            const adminHtml = `
-                <div class="admin-list-item">
-                    <span class="text-gray-800 truncate">${member.name}</span>
-                    <div class="flex items-center">
-                        <button class="edit-team text-blue-500 hover:text-blue-700 mr-2" data-id="${member.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-team text-red-500 hover:text-red-700" data-id="${member.id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            adminList.insertAdjacentHTML('beforeend', adminHtml);
-        });
+            const teamMembers = await fetchData('team');
+            const allTeam = [...teamMembers, ...localCache.team];
+            if (container) container.innerHTML = '';
+            if (adminList) adminList.innerHTML = '';
+
+            if (allTeam.length === 0) {
+                if (container) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No team members added yet.</p>';
+                if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No team members added yet.</p>';
+                return;
+            }
+
+            allTeam.forEach(member => {
+                if (container) {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                            <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
+                            <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
+                            <p class="text-[#00acc1] font-medium">${member.title}</p>
+                            <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
+                        </div>
+                    `);
+                }
+                if (adminList) {
+                    adminList.insertAdjacentHTML('beforeend', `
+                        <div class="admin-list-item">
+                            <span class="text-gray-800 truncate">${member.name}</span>
+                            <div class="flex items-center">
+                                <button class="edit-team text-blue-500 hover:text-blue-700 mr-2" data-id="${member.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-team text-red-500 hover:text-red-700" data-id="${member.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+        } catch (err) {
+            console.error('renderTeamMembers failed', err);
+        }
     };
 
     const renderEvents = async () => {
-        const events = await fetchData('events');
-        const container = document.getElementById('events-container');
-        const adminList = document.getElementById('admin-event-list');
-        if (!container) return;
-        container.innerHTML = '';
-        if (adminList) adminList.innerHTML = '';
-        if (events.length === 0) {
-            const existingStatic = container.querySelector('.card-hover');
-            if (!existingStatic) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No events added yet.</p>';
-            if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No events added yet.</p>';
-            return;
-        }
-        events.forEach(evt => {
-            const publicHtml = `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
-                    <img src="${evt.image || 'https://via.placeholder.com/600x300.png?text=Event'}" alt="${evt.title}" class="w-full h-44 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">${evt.title}</h3>
-                        <div class="text-sm text-gray-500 mb-2">${evt.date} · ${evt.location || ''}</div>
-                        <p class="text-gray-600 mb-4">${evt.description || ''}</p>
-                        ${evt.link ? `<a href="${evt.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">Event Page <i class="fas fa-arrow-right ml-2"></i></a>` : ''}
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', publicHtml);
+        try {
+            const container = getSafe('events-container');
+            const adminList = getSafe('admin-event-list');
+            if (!container && !adminList) return;
 
-            if (adminList) {
-                const adminHtml = `
-                    <div class="admin-list-item">
-                        <span class="text-gray-800 truncate">${evt.title}</span>
-                        <div class="flex items-center">
-                            <button class="edit-event text-blue-500 hover:text-blue-700 mr-2" data-id="${evt.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="delete-event text-red-500 hover:text-red-700" data-id="${evt.id}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                adminList.insertAdjacentHTML('beforeend', adminHtml);
+            const events = await fetchData('events');
+            if (container) container.innerHTML = '';
+            if (adminList) adminList.innerHTML = '';
+
+            if (events.length === 0) {
+                if (container) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No events added yet.</p>';
+                if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No events added yet.</p>';
+                return;
             }
-        });
+
+            events.forEach(evt => {
+                if (container) {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                            <img src="${evt.image || 'https://via.placeholder.com/600x300.png?text=Event'}" alt="${evt.title}" class="w-full h-44 object-cover">
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">${evt.title}</h3>
+                                <div class="text-sm text-gray-500 mb-2">${evt.date} · ${evt.location || ''}</div>
+                                <p class="text-gray-600 mb-4">${evt.description || ''}</p>
+                                ${evt.link ? `<a href="${evt.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">Event Page <i class="fas fa-arrow-right ml-2"></i></a>` : ''}
+                            </div>
+                        </div>
+                    `);
+                }
+                if (adminList) {
+                    adminList.insertAdjacentHTML('beforeend', `
+                        <div class="admin-list-item">
+                            <span class="text-gray-800 truncate">${evt.title}</span>
+                            <div class="flex items-center">
+                                <button class="edit-event text-blue-500 hover:text-blue-700 mr-2" data-id="${evt.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-event text-red-500 hover:text-red-700" data-id="${evt.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+        } catch (err) {
+            console.error('renderEvents failed', err);
+        }
     };
-
-    // --- Admin Panel & Modal Logic ---
-    const adminToggle = document.getElementById('admin-toggle');
-    const adminPanel = document.getElementById('admin-panel');
-    const closeAdmin = document.getElementById('close-admin');
-    if (adminToggle) adminToggle.addEventListener('click', () => adminPanel.classList.toggle('open'));
-    if (closeAdmin) closeAdmin.addEventListener('click', () => adminPanel.classList.remove('open'));
-
-    const showModal = (modalId) => document.getElementById(modalId).classList.remove('hidden');
-    const hideModal = (modalId) => document.getElementById(modalId).classList.add('hidden');
-
-    const setupModalCloseHandlers = (modalId) => {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-        const closeBtn = modal.querySelector(`#close-${modalId}`);
-        const cancelBtn = modal.querySelector(`#cancel-${modalId}-btn`);
-        if (closeBtn) closeBtn.addEventListener('click', () => hideModal(modalId));
-        if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal(modalId));
-    };
-
-    // Setup all modals
-    ['edit-project-modal', 'edit-blog-modal', 'edit-team-modal'].forEach(setupModalCloseHandlers);
-
-    // --- Event Listeners, Admin Forms, Delete/Edit logic ---
-    // (All your logic from original file remains unchanged here)
-    // [Projects, Blogs, Team, Events editing/deleting and forms code stays fully intact as above]
-
-    // --- Mobile Menu & Scroll Active Links ---
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenuButton) mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.nav-link');
-    const setActiveLink = () => {
-        let current = '';
-        sections.forEach(section => { if (scrollY >= section.offsetTop - 100) current = section.id; });
-        navLinks.forEach(link => link.classList.toggle('active', link.href.includes(current)));
-    };
-    window.addEventListener('scroll', setActiveLink);
-    setActiveLink();
 
     // --- Initial Render ---
     renderProjects();
     renderBlogPosts();
     renderTeamMembers();
     renderEvents();
+
 });
 
