@@ -1,144 +1,124 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // UI Selectors
-    const adminPanel = document.getElementById('admin-panel');
-    const adminToggle = document.getElementById('admin-toggle');
-    const closeAdmin = document.getElementById('close-admin');
-
-    // Toggle Panel
-    if (adminToggle) {
-        adminToggle.onclick = () => {
-            adminPanel.style.display = 'block';
-            setTimeout(() => adminPanel.classList.remove('translate-x-full'), 10);
-            renderAll();
-        };
-    }
-    if (closeAdmin) {
-        closeAdmin.onclick = () => {
-            adminPanel.classList.add('translate-x-full');
-            setTimeout(() => adminPanel.style.display = 'none', 300);
-        };
-    }
-
-    const renderAll = () => {
-        renderTeam();
-        renderProjects();
+    // --- 1. CORE API UTILITIES ---
+    // Uses JSON instead of FormData to bypass Storage billing issues
+    const fetchData = async (endpoint) => {
+        try {
+            const response = await fetch(`/api/${endpoint}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`Error fetching ${endpoint}:`, error);
+            return [];
+        }
     };
 
-    // --- TEAM LOGIC ---
-    async function renderTeam() {
-        const res = await fetch('/api/team');
-        const team = await res.json();
+    const sendData = async (method, endpoint, data) => {
+        const response = await fetch(`/api/${endpoint}`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error('Action failed');
+        return await response.json();
+    };
+
+    // --- 2. ADMIN PANEL TOGGLE ---
+    const adminToggle = document.getElementById('admin-toggle');
+    const adminPanel = document.getElementById('admin-panel');
+    const closeAdmin = document.getElementById('close-admin');
+
+    if (adminToggle) {
+        adminToggle.addEventListener('click', () => adminPanel.classList.add('open'));
+    }
+    if (closeAdmin) {
+        closeAdmin.addEventListener('click', () => adminPanel.classList.remove('open'));
+    }
+
+    // --- 3. TEAM MEMBER LOGIC (URL BASED) ---
+    const renderTeam = async () => {
+        const team = await fetchData('team');
         const container = document.getElementById('team-container');
-        const adminList = document.getElementById('admin-team-list');
+        if (!container) return;
+        container.innerHTML = '';
 
-        if (container) container.innerHTML = '';
-        if (adminList) adminList.innerHTML = '';
-
-        team.forEach(m => {
-            if (container) {
-                container.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-lg shadow-lg p-6 text-center border-t-4 border-[#00acc1]">
-                        <img src="${m.image}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover" onerror="this.src='https://via.placeholder.com/150'">
-                        <h3 class="text-xl font-bold">${m.name}</h3>
-                        <p class="text-[#00acc1] font-medium">${m.title}</p>
-                    </div>
-                `);
-            }
-            if (adminList) {
-                adminList.insertAdjacentHTML('beforeend', `
-                    <div class="flex justify-between items-center p-2 bg-gray-50 border rounded">
-                        <span class="text-xs font-bold truncate w-32">${m.name}</span>
-                        <button onclick="deleteItem('team', '${m.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
-                    </div>
-                `);
-            }
+        team.forEach(member => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center card-hover">
+                    <img src="${member.image}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]" 
+                         onerror="this.src='https://via.placeholder.com/150'">
+                    <h3 class="text-xl font-bold text-gray-900">${member.name}</h3>
+                    <p class="text-[#00acc1] font-medium">${member.title}</p>
+                    <p class="text-gray-600 text-sm mt-2">${member.bio}</p>
+                </div>
+            `);
         });
-    }
+    };
 
-    // --- PROJECT LOGIC ---
-    async function renderProjects() {
-        const res = await fetch('/api/projects');
-        const projects = await res.json();
-        const container = document.getElementById('projects-container');
-        const adminList = document.getElementById('admin-project-list');
-
-        if (container) container.innerHTML = '';
-        if (adminList) adminList.innerHTML = '';
-
-        projects.forEach(p => {
-            if (container) {
-                container.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover">
-                        <img src="${p.image}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/400x200'">
-                        <div class="p-4">
-                            <h3 class="font-bold text-lg text-gray-900">${p.title}</h3>
-                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">${p.description}</p>
-                            <a href="${p.link}" target="_blank" class="text-[#00acc1] font-bold text-sm hover:underline">View Details →</a>
-                        </div>
-                    </div>
-                `);
-            }
-            if (adminList) {
-                adminList.insertAdjacentHTML('beforeend', `
-                    <div class="flex justify-between items-center p-2 bg-gray-50 border rounded">
-                        <span class="text-xs font-bold truncate w-32">${p.title}</span>
-                        <button onclick="deleteItem('projects', '${p.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
-                    </div>
-                `);
-            }
-        });
-    }
-
-    // --- FORM HANDLING (NO REFRESH) ---
-    const teamForm = document.getElementById('team-upload-form');
+    const teamForm = document.getElementById('edit-team-form');
     if (teamForm) {
-        teamForm.onsubmit = async (e) => {
+        teamForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = {
-                name: document.getElementById('member-name-input').value,
-                title: document.getElementById('member-title-input').value,
-                bio: document.getElementById('member-bio-input').value,
-                image: document.getElementById('member-image-url-input').value
+            const memberData = {
+                name: document.getElementById('member-name').value,
+                title: document.getElementById('member-title').value,
+                bio: document.getElementById('member-bio').value,
+                image: document.getElementById('member-image-url-input').value // From the new text input
             };
-            await fetch('/api/team', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            alert("Member Saved!");
-            teamForm.reset();
-            renderTeam();
-        };
+
+            try {
+                await sendData('POST', 'team', memberData);
+                alert("Team member added successfully!");
+                teamForm.reset();
+                renderTeam();
+            } catch (err) {
+                alert("Error saving team member. Check Firestore rules.");
+            }
+        });
     }
 
-    const projectForm = document.getElementById('project-upload-form');
-    if (projectForm) {
-        projectForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const data = {
-                title: document.getElementById('project-title-input').value,
-                description: document.getElementById('project-desc-input').value,
-                image: document.getElementById('project-image-url-input').value,
-                link: document.getElementById('project-link-input').value
-            };
-            await fetch('/api/projects', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            alert("Project Saved!");
-            projectForm.reset();
-            renderProjects();
-        };
-    }
+    // --- 4. PROJECTS & BLOGS LOGIC ---
+    const renderProjects = async () => {
+        const projects = await fetchData('projects');
+        const container = document.getElementById('projects-container');
+        if (!container) return;
+        container.innerHTML = '';
 
-    renderAll();
+        projects.forEach(project => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${project.image}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/400x200'">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg">${project.title}</h3>
+                        <p class="text-gray-600 text-sm">${project.description}</p>
+                    </div>
+                </div>
+            `);
+        });
+    };
+
+    // --- 5. EVENTS LOGIC ---
+    const renderEvents = async () => {
+        const events = await fetchData('events');
+        const container = document.getElementById('events-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        events.forEach(event => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="border-l-4 border-[#00acc1] bg-white p-4 shadow-sm">
+                    <h4 class="font-bold">${event.name}</h4>
+                    <p class="text-sm text-gray-500">${event.date}</p>
+                    <p class="text-gray-700">${event.description}</p>
+                </div>
+            `);
+        });
+    };
+
+    // --- 6. INITIALIZE EVERYTHING ---
+    const init = () => {
+        renderTeam();
+        renderProjects();
+        renderEvents();
+    };
+
+    init();
 });
-
-// Global Delete
-window.deleteItem = async (type, id) => {
-    if (confirm(`Are you sure you want to delete this ${type}?`)) {
-        await fetch(`/api/${type}/${id}`, { method: 'DELETE' });
-        location.reload();
-    }
-};
