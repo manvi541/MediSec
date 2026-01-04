@@ -1,235 +1,793 @@
-// Data Management
-let blogPosts = JSON.parse(localStorage.getItem('blogPosts')) || [];
-let projects = JSON.parse(localStorage.getItem('projects')) || [];
-let teamMembers = JSON.parse(localStorage.getItem('teamMembers')) || [
-    {
-        id: '1',
-        name: 'Jane Doe',
-        title: 'Chief Medical Officer',
-        bio: 'Jane has over 15 years of experience in healthcare administration and is passionate about leveraging technology to improve patient care.',
-        image: 'images/image_e87710.jpg'
-    },
-    {
-        id: '2',
-        name: 'John Smith',
-        title: 'Lead Developer',
-        bio: 'John is a full-stack developer with a focus on creating secure and scalable applications for the medical industry.',
-        image: 'images/image_e87749.jpg'
-    }
-];
-let events = JSON.parse(localStorage.getItem('events')) || [];
-
-// DOM Elements
-const adminToggle = document.getElementById('admin-toggle');
-const adminPanel = document.getElementById('admin-panel');
-const closeAdmin = document.getElementById('close-admin');
-const mobileMenuButton = document.getElementById('mobile-menu-button');
-const mobileMenu = document.getElementById('mobile-menu');
-
-// Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    renderAll();
-    setupEventListeners();
-});
 
-function renderAll() {
-    renderBlogPosts();
-    renderProjects();
-    renderTeam();
-    renderEvents();
-    renderAdminLists();
-}
+    // --- API Call Functions (Communicating with server.js) ---
+    const fetchData = async (endpoint) => {
+        try {
+            const response = await fetch(`/api/${endpoint}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            return await response.json();
+        } catch (error) {
+            console.error(`Failed to fetch ${endpoint}:`, error);
+            return []; // Return empty array on error
+        }
+    };
 
-// --- Navigation & UI ---
-function setupEventListeners() {
-    adminToggle.addEventListener('click', () => adminPanel.classList.toggle('open'));
-    closeAdmin.addEventListener('click', () => adminPanel.classList.remove('open'));
+    // Local in-memory fallback cache when server is unavailable
+    const localCache = {
+        projects: [],
+        blogs: [],
+        team: [],
+        events: []
+    };
+
+    // Simple on-screen message helper using #custom-message-box in the HTML
+    const showMessage = (msg, isError = false, timeout = 3000) => {
+        try {
+            const box = document.getElementById('custom-message-box');
+            const text = document.getElementById('custom-message-text');
+            const cancelBtn = document.getElementById('custom-message-cancel-btn');
+            const confirmBtn = document.getElementById('custom-message-confirm-btn');
+            if (!box || !text || !confirmBtn) return;
+            text.textContent = msg;
+            box.classList.remove('hidden');
+            // hide cancel (we don't need it here)
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            confirmBtn.textContent = isError ? 'Close' : 'OK';
+            const hide = () => box.classList.add('hidden');
+            // allow manual close
+            confirmBtn.onclick = hide;
+            // auto-hide after timeout
+            if (timeout > 0) setTimeout(hide, timeout);
+        } catch (err) {
+            console.error('showMessage failed', err);
+        }
+    };
+
+    const generateId = (prefix = '') => `${prefix}${Date.now()}-${Math.floor(Math.random()*10000)}`;
+
+    // Generic function for JSON POST/PUT
+    const sendJsonData = async (method, endpoint, data) => {
+        try {
+            const response = await fetch(`/api/${endpoint}`, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+            return await response.json();
+        } catch (error) {
+            console.error(`Failed to ${method.toLowerCase()} ${endpoint}:`, error);
+            throw error;
+        }
+    };
+
+    // Specific function for file upload POST/PUT
+    const sendFormData = async (method, endpoint, formData) => {
+        try {
+            const response = await fetch(`/api/${endpoint}`, {
+                method: method,
+                body: formData,
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+            return await response.json();
+        } catch (error) {
+            console.error(`Failed to ${method.toLowerCase()} ${endpoint}:`, error);
+            throw error;
+        }
+    };
+
+    const deleteData = async (endpoint, id) => {
+        try {
+            const response = await fetch(`/api/${endpoint}/${id}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+            return await response.json();
+        } catch (error) {
+            console.error(`Failed to delete ${endpoint}:`, error);
+            throw error;
+        }
+    };
+
+    // --- Dynamic Content Rendering Functions ---
+    const renderProjects = async () => {
+        const projects = await fetchData('projects');
+        const container = document.getElementById('projects-container');
+        const adminList = document.getElementById('admin-project-list');
+        container.innerHTML = '';
+        adminList.innerHTML = '';
+
+        const allProjects = [...projects, ...localCache.projects];
+
+        if (allProjects.length === 0) {
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No projects added yet.</p>';
+            adminList.innerHTML = '<p class="text-center text-gray-500">No projects added yet.</p>';
+            return;
+        }
+
+        allProjects.forEach(project => {
+            const publicHtml = `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                    <img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${project.title}</h3>
+                        <p class="text-gray-600 mb-4">${project.description}</p>
+                        <a href="${project.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                            View Project <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', publicHtml);
+
+            const adminHtml = `
+                <div class="admin-list-item">
+                    <span class="text-gray-800 truncate">${project.title}</span>
+                    <div class="flex items-center">
+                        <button class="edit-project text-blue-500 hover:text-blue-700 mr-2" data-id="${project.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-project text-red-500 hover:text-red-700" data-id="${project.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            adminList.insertAdjacentHTML('beforeend', adminHtml);
+        });
+    };
+
+    const renderBlogPosts = async () => {
+        const blogPosts = await fetchData('blogs');
+        const container = document.getElementById('blog-posts-container');
+        const adminList = document.getElementById('admin-blog-list');
+        container.innerHTML = '';
+        adminList.innerHTML = '';
+
+        const allBlogs = [...blogPosts, ...localCache.blogs];
+
+        if (allBlogs.length === 0) {
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No blog posts added yet.</p>';
+            adminList.innerHTML = '<p class="text-center text-gray-500">No blog posts added yet.</p>';
+            return;
+        }
+
+        allBlogs.forEach(blog => {
+            const publicHtml = `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                    <img src="${blog.image || 'https://via.placeholder.com/400x250.png?text=No+Image'}" alt="${blog.title}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <span class="text-sm text-gray-500">${blog.date} | ${blog.category}</span>
+                        <h3 class="text-xl font-bold text-gray-900 my-2">${blog.title}</h3>
+                        <p class="text-gray-600">${blog.excerpt}</p>
+                        <a href="${blog.link}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">
+                            Read More <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', publicHtml);
+
+            const adminHtml = `
+                <div class="admin-list-item">
+                    <span class="text-gray-800 truncate">${blog.title}</span>
+                    <div class="flex items-center">
+                        <button class="edit-blog text-blue-500 hover:text-blue-700 mr-2" data-id="${blog.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-blog text-red-500 hover:text-red-700" data-id="${blog.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            adminList.insertAdjacentHTML('beforeend', adminHtml);
+        });
+    };
+
+const renderTeamMembers = async () => {
+    const teamMembers = await fetchData('team');
+    // REMOVED localCache merge so we only see real Firebase data
+    const container = document.getElementById('team-container');
+    const adminList = document.getElementById('admin-team-list');
     
+    container.innerHTML = '';
+    if (adminList) adminList.innerHTML = '';
+
+    if (teamMembers.length === 0) {
+        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No officers found in database.</p>';
+        if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No team members added yet.</p>';
+        return;
+    }
+
+    teamMembers.forEach(member => {
+        const publicHtml = `
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                <img src="${member.image || 'https://via.placeholder.com/150'}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
+                <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
+                <p class="text-[#00acc1] font-medium">${member.title}</p>
+                <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', publicHtml);
+
+        if (adminList) {
+            const adminHtml = `
+                <div class="admin-list-item">
+                    <span class="text-gray-800 truncate">${member.name}</span>
+                    <div class="flex items-center">
+                        <button class="edit-team text-blue-500 hover:text-blue-700 mr-2" data-id="${member.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-team text-red-500 hover:text-red-700" data-id="${member.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>`;
+            adminList.insertAdjacentHTML('beforeend', adminHtml);
+        }
+    });
+};
+
+        allTeam.forEach(member => {
+            const publicHtml = `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                    <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
+                    <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
+                    <p class="text-[#00acc1] font-medium">${member.title}</p>
+                    <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', publicHtml);
+
+            const adminHtml = `
+                <div class="admin-list-item">
+                    <span class="text-gray-800 truncate">${member.name}</span>
+                    <div class="flex items-center">
+                        <button class="edit-team text-blue-500 hover:text-blue-700 mr-2" data-id="${member.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-team text-red-500 hover:text-red-700" data-id="${member.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            adminList.insertAdjacentHTML('beforeend', adminHtml);
+        });
+    };
+
+    // Events Rendering
+    const renderEvents = async () => {
+        const events = await fetchData('events');
+        const container = document.getElementById('events-container');
+        const adminList = document.getElementById('admin-event-list');
+        if (!container) return;
+        container.innerHTML = '';
+        if (adminList) adminList.innerHTML = '';
+
+        if (events.length === 0) {
+            // Keep static placeholder if present in HTML; otherwise show message
+            const existingStatic = container.querySelector('.card-hover');
+            if (!existingStatic) container.innerHTML = '<p class="col-span-full text-center text-gray-500">No events added yet.</p>';
+            if (adminList) adminList.innerHTML = '<p class="text-center text-gray-500">No events added yet.</p>';
+            return;
+        }
+
+        events.forEach(evt => {
+            const publicHtml = `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover animate-zoom-in">
+                    <img src="${evt.image || 'https://via.placeholder.com/600x300.png?text=Event'}" alt="${evt.title}" class="w-full h-44 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${evt.title}</h3>
+                        <div class="text-sm text-gray-500 mb-2">${evt.date} · ${evt.location || ''}</div>
+                        <p class="text-gray-600 mb-4">${evt.description || ''}</p>
+                        ${evt.link ? `<a href="${evt.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00acc1] hover:bg-[#7a97ab] transition duration-300">Event Page <i class="fas fa-arrow-right ml-2"></i></a>` : ''}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', publicHtml);
+
+            if (adminList) {
+                const adminHtml = `
+                    <div class="admin-list-item">
+                        <span class="text-gray-800 truncate">${evt.title}</span>
+                        <div class="flex items-center">
+                            <button class="edit-event text-blue-500 hover:text-blue-700 mr-2" data-id="${evt.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-event text-red-500 hover:text-red-700" data-id="${evt.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                adminList.insertAdjacentHTML('beforeend', adminHtml);
+            }
+        });
+    };
+
+    // --- Admin Panel & Modal Functionality ---
+
+    const adminToggle = document.getElementById('admin-toggle');
+    const adminPanel = document.getElementById('admin-panel');
+    const closeAdmin = document.getElementById('close-admin');
+
+    if (adminToggle) {
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('open');
+        });
+    }
+
+    if (closeAdmin) {
+        closeAdmin.addEventListener('click', () => {
+            adminPanel.classList.remove('open');
+        });
+    }
+
+    // Admin Edit Modal Handlers
+
+    const showModal = (modalId) => {
+        document.getElementById(modalId).classList.remove('hidden');
+    };
+
+    const hideModal = (modalId) => {
+        document.getElementById(modalId).classList.add('hidden');
+    };
+
+    const setupModalCloseHandlers = (modalId) => {
+        const modal = document.getElementById(modalId);
+        const closeBtn = modal.querySelector(`#close-${modalId}`);
+        const cancelBtn = modal.querySelector(`#cancel-${modalId}-btn`);
+
+        if (closeBtn) closeBtn.addEventListener('click', () => hideModal(modalId));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal(modalId));
+    };
+
+    // Project Modal Logic
+    const editProjectModal = document.getElementById('edit-project-modal');
+    setupModalCloseHandlers('edit-project-modal');
+    const editProjectForm = document.getElementById('edit-project-form');
+    let currentEditProjectId = null;
+
+    document.getElementById('admin-project-list').addEventListener('click', async (e) => {
+        if (e.target.closest('.edit-project')) {
+            const id = e.target.closest('.edit-project').dataset.id;
+            const projects = await fetchData('projects');
+            let projectToEdit = projects.find(p => p.id === id);
+            if (!projectToEdit) projectToEdit = localCache.projects.find(p => p.id === id);
+            if (projectToEdit) {
+                currentEditProjectId = id;
+                document.getElementById('modal-project-title').value = projectToEdit.title;
+                document.getElementById('modal-project-description').value = projectToEdit.description;
+                document.getElementById('modal-project-image').value = projectToEdit.image;
+                document.getElementById('modal-project-link').value = projectToEdit.link;
+                showModal('edit-project-modal');
+            }
+        } else if (e.target.closest('.delete-project')) {
+            const id = e.target.closest('.delete-project').dataset.id;
+            const listItem = e.target.closest('.admin-list-item');
+            const titleText = listItem && listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '';
+            if (confirm('Are you sure you want to delete this project?')) {
+                // Optimistically remove locally for immediate feedback
+                localCache.projects = localCache.projects.filter(p => p.id !== id);
+                if (listItem) listItem.remove();
+                renderProjects();
+                try {
+                    await deleteData('projects', id);
+                    showMessage('Project deleted.', false, 2500);
+                } catch (err) {
+                    console.warn('Server delete failed for project id', id, err);
+                    // Fallback: try to find server-side project by title and delete that
+                    try {
+                        if (titleText) {
+                            const serverProjects = await fetchData('projects');
+                            let match = serverProjects.find(p => (p.title || '').trim().toLowerCase() === titleText.toLowerCase());
+                            if (!match) {
+                                match = serverProjects.find(p => (p.title || '').toLowerCase().includes(titleText.toLowerCase()) || titleText.toLowerCase().includes((p.title || '').toLowerCase()));
+                            }
+                            if (match) {
+                                try {
+                                    await deleteData('projects', match.id);
+                                    console.log('Deleted server-side project by title match:', match.id);
+                                    showMessage('Project deleted (matched by title).', false, 2500);
+                                } catch (delErr) {
+                                    console.error('Failed to delete matched server-side project', match.id, delErr);
+                                    showMessage('Failed to delete project on server.', true, 4000);
+                                }
+                            }
+                        }
+                    } catch (lookupErr) {
+                        console.error('Failed to lookup server-side projects for deletion', lookupErr);
+                    }
+                }
+            }
+        }
+    });
+
+    if (editProjectForm) {
+        editProjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedProject = {
+                title: document.getElementById('modal-project-title').value,
+                description: document.getElementById('modal-project-description').value,
+                image: document.getElementById('modal-project-image').value,
+                link: document.getElementById('modal-project-link').value,
+            };
+            try {
+                await sendJsonData('PUT', `projects/${currentEditProjectId}`, updatedProject);
+            } catch (err) {
+                // Update local cache if present
+                const idx = localCache.projects.findIndex(p => p.id === currentEditProjectId);
+                if (idx !== -1) {
+                    localCache.projects[idx] = { id: currentEditProjectId, ...updatedProject };
+                } else {
+                    // if not present locally, add it so UI reflects change
+                    localCache.projects.push({ id: currentEditProjectId, ...updatedProject });
+                }
+            }
+            renderProjects();
+            hideModal('edit-project-modal');
+        });
+    }
+
+    // Blog Modal Logic
+    const editBlogModal = document.getElementById('edit-blog-modal');
+    setupModalCloseHandlers('edit-blog-modal');
+    const editBlogForm = document.getElementById('edit-blog-form');
+    let currentEditBlogId = null;
+
+    document.getElementById('admin-blog-list').addEventListener('click', async (e) => {
+        if (e.target.closest('.edit-blog')) {
+            const id = e.target.closest('.edit-blog').dataset.id;
+            const blogPosts = await fetchData('blogs');
+            let blogToEdit = blogPosts.find(b => b.id === id);
+            if (!blogToEdit) blogToEdit = localCache.blogs.find(b => b.id === id);
+            if (blogToEdit) {
+                currentEditBlogId = id;
+                document.getElementById('modal-blog-title').value = blogToEdit.title;
+                document.getElementById('modal-blog-date').value = blogToEdit.date;
+                document.getElementById('modal-blog-category').value = blogToEdit.category;
+                document.getElementById('modal-blog-excerpt').value = blogToEdit.excerpt;
+                document.getElementById('modal-blog-image').value = blogToEdit.image;
+                document.getElementById('modal-blog-link').value = blogToEdit.link;
+                showModal('edit-blog-modal');
+            }
+        } else if (e.target.closest('.delete-blog')) {
+            const id = e.target.closest('.delete-blog').dataset.id;
+            const listItem = e.target.closest('.admin-list-item');
+            const titleText = listItem && listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '';
+            if (confirm('Are you sure you want to delete this blog post?')) {
+                // Optimistically remove locally and from UI
+                localCache.blogs = localCache.blogs.filter(b => b.id !== id);
+                if (listItem) listItem.remove();
+                renderBlogPosts();
+                try {
+                    await deleteData('blogs', id);
+                    showMessage('Blog post deleted.', false, 2500);
+                } catch (err) {
+                    console.warn('Server delete failed for blog id', id, err);
+                    // Fallback: try to find server-side blog by title and delete
+                    try {
+                        if (titleText) {
+                            const serverBlogs = await fetchData('blogs');
+                            let match = serverBlogs.find(b => (b.title || '').trim().toLowerCase() === titleText.toLowerCase());
+                            if (!match) {
+                                match = serverBlogs.find(b => (b.title || '').toLowerCase().includes(titleText.toLowerCase()) || titleText.toLowerCase().includes((b.title || '').toLowerCase()));
+                            }
+                            if (match) {
+                                try {
+                                    await deleteData('blogs', match.id);
+                                    console.log('Deleted server-side blog by title match:', match.id);
+                                    showMessage('Blog post deleted (matched by title).', false, 2500);
+                                } catch (delErr) {
+                                    console.error('Failed to delete matched server-side blog', match.id, delErr);
+                                    showMessage('Failed to delete blog on server.', true, 4000);
+                                }
+                            }
+                        }
+                    } catch (lookupErr) {
+                        console.error('Failed to lookup server-side blogs for deletion', lookupErr);
+                    }
+                }
+            }
+        }
+    });
+
+    if (editBlogForm) {
+        editBlogForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedBlog = {
+                title: document.getElementById('modal-blog-title').value,
+                date: document.getElementById('modal-blog-date').value,
+                category: document.getElementById('modal-blog-category').value,
+                excerpt: document.getElementById('modal-blog-excerpt').value,
+                image: document.getElementById('modal-blog-image').value,
+                link: document.getElementById('modal-blog-link').value,
+            };
+            try {
+                await sendJsonData('PUT', `blogs/${currentEditBlogId}`, updatedBlog);
+            } catch (err) {
+                const idx = localCache.blogs.findIndex(b => b.id === currentEditBlogId);
+                if (idx !== -1) {
+                    localCache.blogs[idx] = { id: currentEditBlogId, ...updatedBlog };
+                } else {
+                    localCache.blogs.push({ id: currentEditBlogId, ...updatedBlog });
+                }
+            }
+            renderBlogPosts();
+            hideModal('edit-blog-modal');
+        });
+    }
+
+    // Team Modal Logic
+// --- Updated Team Modal Logic (Firebase Connected) ---
+    const editTeamModal = document.getElementById('edit-team-modal');
+    setupModalCloseHandlers('edit-team-modal');
+    const editTeamForm = document.getElementById('edit-team-form');
+    let currentEditMemberId = null;
+
+    document.getElementById('admin-team-list').addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-team');
+        const deleteBtn = e.target.closest('.delete-team');
+
+        if (editBtn) {
+            const id = editBtn.dataset.id;
+            const teamMembers = await fetchData('team');
+            const memberToEdit = teamMembers.find(m => m.id === id);
+            
+            if (memberToEdit) {
+                currentEditMemberId = id;
+                document.getElementById('member-name').value = memberToEdit.name;
+                document.getElementById('member-title').value = memberToEdit.title;
+                document.getElementById('member-bio').value = memberToEdit.bio;
+
+                // Store current image URL and show a preview
+                document.getElementById('member-image-url').value = memberToEdit.image || '';
+                const imagePreview = document.getElementById('current-image-preview');
+                imagePreview.innerHTML = memberToEdit.image ? 
+                    `<img src="${memberToEdit.image}" class="w-16 h-16 object-cover rounded-full mt-2" alt="Current Profile Image">` : 
+                    'No current image.';
+
+                // Clear file input on modal open
+                document.getElementById('member-image-file').value = '';
+                showModal('edit-team-modal');
+            }
+        } else if (deleteBtn) {
+            const id = deleteBtn.dataset.id;
+            if (confirm('Are you sure you want to delete this officer permanently from Firebase?')) {
+                try {
+                    await deleteData('team', id);
+                    showMessage('Officer deleted successfully.');
+                    // Re-render immediately from Firebase
+                    renderTeamMembers();
+                } catch (err) {
+                    console.error('Delete failed', err);
+                    showMessage('Failed to delete from server.', true);
+                }
+            }
+        }
+    });
+
+    if (editTeamForm) {
+        editTeamForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('member-name').value);
+            formData.append('title', document.getElementById('member-title').value);
+            formData.append('bio', document.getElementById('member-bio').value);
+
+            const imageFile = document.getElementById('member-image-file').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            } else {
+                formData.append('image', document.getElementById('member-image-url').value);
+            }
+
+            try {
+                // This sends the data to your server.js which updates Firebase
+                await sendFormData('PUT', `team/${currentEditMemberId}`, formData);
+                showMessage('Changes saved to Firebase!');
+                hideModal('edit-team-modal');
+                // Force a re-fetch of the data so we know it saved correctly
+                renderTeamMembers();
+            } catch (err) {
+                console.error('Update failed', err);
+                showMessage('Error: Could not save to Firebase.', true);
+            }
+        });
+    }
+
+    // --- Admin Add Forms ---
+
+    document.getElementById('blog-upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newBlog = {
+            title: document.getElementById('blog-title').value,
+            date: document.getElementById('blog-date').value,
+            category: document.getElementById('blog-category').value,
+            excerpt: document.getElementById('blog-excerpt').value,
+            image: document.getElementById('blog-image').value,
+            link: document.getElementById('blog-link').value
+        };
+        try {
+            await sendJsonData('POST', 'blogs', newBlog);
+        } catch (err) {
+            // Server unavailable — store locally and render
+            const id = generateId('blog-');
+            localCache.blogs.push({ id, ...newBlog });
+        }
+        renderBlogPosts();
+        e.target.reset();
+    });
+
+document.getElementById('add-team-member-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', document.getElementById('new-member-name').value);
+    formData.append('title', document.getElementById('new-member-title').value);
+    formData.append('bio', document.getElementById('new-member-bio').value);
+    
+    const imageFile = document.getElementById('new-member-image').files[0];
+    if (imageFile) formData.append('image', imageFile);
+
+    try {
+        await sendFormData('POST', 'team', formData);
+        showMessage('New officer added to Firebase!');
+        renderTeamMembers();
+        e.target.reset();
+    } catch (err) {
+        showMessage('Failed to add officer', true);
+    }
+});
+    document.getElementById('project-upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newProject = {
+            title: document.getElementById('project-title').value,
+            description: document.getElementById('project-description').value,
+            image: document.getElementById('project-image').value,
+            link: document.getElementById('project-link').value
+        };
+        try {
+            await sendJsonData('POST', 'projects', newProject);
+        } catch (err) {
+            const id = generateId('project-');
+            localCache.projects.push({ id, ...newProject });
+        }
+        renderProjects();
+        e.target.reset();
+    });
+
+    // Event Upload Form
+    const eventUploadForm = document.getElementById('event-upload-form');
+    if (eventUploadForm) {
+        eventUploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('title', document.getElementById('event-title').value);
+            formData.append('date', document.getElementById('event-date').value);
+            formData.append('location', document.getElementById('event-location').value);
+            formData.append('description', document.getElementById('event-description').value);
+            formData.append('link', document.getElementById('event-link').value);
+
+            const imageFile = document.getElementById('event-image').files[0];
+            if (imageFile) formData.append('image', imageFile);
+            try {
+                await sendFormData('POST', 'events', formData);
+            } catch (err) {
+                const id = generateId('event-');
+                let imageUrl = '';
+                if (imageFile) {
+                    try { imageUrl = URL.createObjectURL(imageFile); } catch (e) { imageUrl = ''; }
+                }
+                localCache.events.push({ id, title: document.getElementById('event-title').value, date: document.getElementById('event-date').value, location: document.getElementById('event-location').value, description: document.getElementById('event-description').value, link: document.getElementById('event-link').value, image: imageUrl });
+            }
+            renderEvents();
+            e.target.reset();
+        });
+    }
+
+    // Admin event list actions (edit/delete)
+    const adminEventList = document.getElementById('admin-event-list');
+    if (adminEventList) {
+        adminEventList.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-event')) {
+                const id = e.target.closest('.delete-event').dataset.id;
+                const listItem = e.target.closest('.admin-list-item');
+                const titleText = listItem && listItem.querySelector('span') ? listItem.querySelector('span').textContent.trim() : '';
+                if (confirm('Are you sure you want to delete this event?')) {
+                    // Optimistically remove locally and from UI
+                    localCache.events = localCache.events.filter(ev => ev.id !== id);
+                    if (listItem) listItem.remove();
+                    renderEvents();
+                    try {
+                        await deleteData('events', id);
+                        showMessage('Event deleted.', false, 2500);
+                    } catch (err) {
+                        console.warn('Server delete failed for event id', id, err);
+                        // Fallback: try to find server-side event by title and delete
+                        try {
+                            if (titleText) {
+                                const serverEvents = await fetchData('events');
+                                let match = serverEvents.find(ev => (ev.title || '').trim().toLowerCase() === titleText.toLowerCase());
+                                if (!match) {
+                                    match = serverEvents.find(ev => (ev.title || '').toLowerCase().includes(titleText.toLowerCase()) || titleText.toLowerCase().includes((ev.title || '').toLowerCase()));
+                                }
+                                if (match) {
+                                    try {
+                                        await deleteData('events', match.id);
+                                        console.log('Deleted server-side event by title match:', match.id);
+                                        showMessage('Event deleted (matched by title).', false, 2500);
+                                    } catch (delErr) {
+                                        console.error('Failed to delete matched server-side event', match.id, delErr);
+                                        showMessage('Failed to delete event on server.', true, 4000);
+                                    }
+                                }
+                            }
+                        } catch (lookupErr) {
+                            console.error('Failed to lookup server-side events for deletion', lookupErr);
+                        }
+                    }
+                }
+            } else if (e.target.closest('.edit-event')) {
+                // Simple inline edit could be implemented, but for now prompt for basic edits
+                const id = e.target.closest('.edit-event').dataset.id;
+                const events = await fetchData('events');
+                let evt = events.find(ev => ev.id === id);
+                if (!evt) evt = localCache.events.find(ev => ev.id === id);
+                if (!evt) return;
+                const newTitle = prompt('Edit event title:', evt.title);
+                if (newTitle === null) return; // cancel
+                const updated = { ...evt, title: newTitle };
+                try {
+                    await sendJsonData('PUT', `events/${id}`, updated);
+                } catch (err) {
+                    const idx = localCache.events.findIndex(ev => ev.id === id);
+                    if (idx !== -1) localCache.events[idx] = { id, ...updated };
+                    else localCache.events.push({ id, ...updated });
+                }
+                renderEvents();
+            }
+        });
+    }
+
+    // --- Other Functionality ---
+
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
     mobileMenuButton.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
     });
 
-    // Forms
-    document.getElementById('blog-upload-form').addEventListener('submit', handleAddBlog);
-    document.getElementById('project-upload-form').addEventListener('submit', handleAddProject);
-    document.getElementById('team-member-form').addEventListener('submit', handleTeamSubmit);
-    document.getElementById('event-upload-form').addEventListener('submit', handleAddEvent);
-}
+    // Scroll-based active navigation
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
 
-// --- Team Management ---
-function renderTeam() {
-    const container = document.getElementById('team-container');
-    container.innerHTML = teamMembers.map(member => `
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
-            <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
-            <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
-            <p class="text-[#00acc1] font-medium">${member.title}</p>
-            <p class="mt-2 text-gray-600 text-sm">${member.bio}</p>
-        </div>
-    `).join('');
-}
+    const setActiveLink = () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 100;
+            if (scrollY >= sectionTop) {
+                current = section.getAttribute('id');
+            }
+        });
 
-function handleTeamSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById('edit-member-id').value;
-    const newMember = {
-        id: id || Date.now().toString(),
-        name: document.getElementById('member-name').value,
-        title: document.getElementById('member-title').value,
-        bio: document.getElementById('member-bio').value,
-        image: document.getElementById('member-image-url').value
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.href.includes(current)) {
+                link.classList.add('active');
+            }
+        });
     };
 
-    if (id) {
-        teamMembers = teamMembers.map(m => m.id === id ? newMember : m);
-    } else {
-        teamMembers.push(newMember);
-    }
+    window.addEventListener('scroll', setActiveLink);
+    setActiveLink(); // Call on load to set initial active link
 
-    saveAndRefresh();
-    e.target.reset();
-}
-
-// --- Project Management ---
-function renderProjects() {
-    const container = document.getElementById('projects-container');
-    if (projects.length === 0) {
-        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No projects yet.</p>';
-        return;
-    }
-    container.innerHTML = projects.map(project => `
-        <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover transition duration-300">
-            <img src="${project.image || 'https://via.placeholder.com/400x200'}" alt="${project.title}" class="w-full h-48 object-cover">
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">${project.title}</h3>
-                <p class="text-gray-600 mb-4 text-sm">${project.description}</p>
-                <a href="${project.link}" target="_blank" class="text-[#00acc1] font-semibold hover:underline">View Project →</a>
-            </div>
-        </div>
-    `).join('');
-}
-
-function handleAddProject(e) {
-    e.preventDefault();
-    const project = {
-        id: Date.now().toString(),
-        title: document.getElementById('project-title').value,
-        description: document.getElementById('project-description').value,
-        image: document.getElementById('project-image').value,
-        link: document.getElementById('project-link').value
-    };
-    projects.push(project);
-    saveAndRefresh();
-    e.target.reset();
-}
-
-// --- Blog Management ---
-function renderBlogPosts() {
-    const container = document.getElementById('blog-posts-container');
-    if (blogPosts.length === 0) {
-        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No blog posts yet.</p>';
-        return;
-    }
-    container.innerHTML = blogPosts.map(post => `
-        <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover transition duration-300">
-            <div class="p-6">
-                <span class="text-xs font-bold text-[#00acc1] uppercase tracking-wider">${post.category}</span>
-                <h3 class="text-xl font-bold text-gray-900 mt-2 mb-2">${post.title}</h3>
-                <p class="text-gray-500 text-sm mb-4">${new Date(post.date).toLocaleDateString()}</p>
-                <p class="text-gray-600 mb-4 text-sm">${post.excerpt}</p>
-                ${post.link ? `<a href="${post.link}" class="text-[#00acc1] font-semibold hover:underline">Read More</a>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-function handleAddBlog(e) {
-    e.preventDefault();
-    const blog = {
-        id: Date.now().toString(),
-        title: document.getElementById('blog-title').value,
-        date: document.getElementById('blog-date').value,
-        category: document.getElementById('blog-category').value,
-        excerpt: document.getElementById('blog-excerpt').value,
-        image: document.getElementById('blog-image').value,
-        link: document.getElementById('blog-link').value
-    };
-    blogPosts.push(blog);
-    saveAndRefresh();
-    e.target.reset();
-}
-
-// --- Event Management ---
-function renderEvents() {
-    const container = document.getElementById('events-container');
-    if (events.length === 0) {
-        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No upcoming events.</p>';
-        return;
-    }
-    container.innerHTML = events.map(event => `
-        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-[#00acc1]">
-            <h3 class="text-lg font-bold text-gray-900">${event.title}</h3>
-            <p class="text-gray-500 mb-2"><i class="far fa-calendar-alt mr-2"></i>${new Date(event.date).toLocaleDateString()}</p>
-        </div>
-    `).join('');
-}
-
-function handleAddEvent(e) {
-    e.preventDefault();
-    const event = {
-        id: Date.now().toString(),
-        title: document.getElementById('event-title').value,
-        date: document.getElementById('event-date').value
-    };
-    events.push(event);
-    saveAndRefresh();
-    e.target.reset();
-}
-
-// --- Admin List Utilities ---
-function renderAdminLists() {
-    // Team Admin List
-    const teamList = document.getElementById('admin-team-list');
-    teamList.innerHTML = teamMembers.map(m => `
-        <div class="admin-list-item">
-            <span>${m.name}</span>
-            <button onclick="deleteItem('team', '${m.id}')"><i class="fas fa-trash"></i></button>
-        </div>
-    `).join('');
-
-    // Project Admin List
-    const projectList = document.getElementById('admin-project-list');
-    projectList.innerHTML = projects.map(p => `
-        <div class="admin-list-item">
-            <span>${p.title}</span>
-            <button onclick="deleteItem('project', '${p.id}')"><i class="fas fa-trash"></i></button>
-        </div>
-    `).join('');
-
-    // Blog Admin List
-    const blogList = document.getElementById('admin-blog-list');
-    blogList.innerHTML = blogPosts.map(b => `
-        <div class="admin-list-item">
-            <span>${b.title}</span>
-            <button onclick="deleteItem('blog', '${b.id}')"><i class="fas fa-trash"></i></button>
-        </div>
-    `).join('');
-}
-
-function deleteItem(type, id) {
-    if (confirm('Are you sure you want to delete this item?')) {
-        if (type === 'team') teamMembers = teamMembers.filter(i => i.id !== id);
-        if (type === 'project') projects = projects.filter(i => i.id !== id);
-        if (type === 'blog') blogPosts = blogPosts.filter(i => i.id !== id);
-        saveAndRefresh();
-    }
-}
-
-// --- Helper Functions ---
-function saveAndRefresh() {
-    localStorage.setItem('blogPosts', JSON.stringify(blogPosts));
-    localStorage.setItem('projects', JSON.stringify(projects));
-    localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
-    localStorage.setItem('events', JSON.stringify(events));
-    renderAll();
-}
+    // Initial render of all content from the server
+    renderProjects();
+    renderBlogPosts();
+    renderTeamMembers();
+    renderEvents();
+});
