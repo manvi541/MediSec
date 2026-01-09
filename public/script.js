@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // Function to fetch team members from the server and display them
     // Function to fetch team members from the server and display them
+// Function to fetch team members from the server and display them
 async function loadTeamMembers() {
     try {
         const response = await fetch('/api/team');
@@ -39,6 +40,42 @@ async function loadTeamMembers() {
         console.error("Error loading team members:", error);
     }
 }
+
+// Function to handle the form submission in the Admin Panel
+const teamForm = document.getElementById('add-team-member-form');
+if (teamForm) {
+    teamForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('name', document.getElementById('new-member-name').value);
+        formData.append('title', document.getElementById('new-member-title').value);
+        formData.append('bio', document.getElementById('new-member-bio').value);
+
+        const imageFile = document.getElementById('new-member-image').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        try {
+            const response = await fetch('/api/team', {
+                method: 'POST',
+                body: formData // Note: No headers! Browser sets 'multipart/form-data' automatically
+            });
+
+            if (response.ok) {
+                alert('Team member added successfully!');
+                teamForm.reset();
+                loadTeamMembers(); // Refresh the list immediately
+            }
+        } catch (error) {
+            console.error("Error adding member:", error);
+        }
+    });
+}
+
+// Run loadTeamMembers as soon as the website opens
+document.addEventListener('DOMContentLoaded', loadTeamMembers);
 
 // Function to handle the form submission in the Admin Panel
 const teamForm = document.getElementById('add-team-member-form');
