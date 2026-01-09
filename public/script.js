@@ -11,6 +11,34 @@ document.addEventListener('DOMContentLoaded', () => {
             return []; // Return empty array on error
         }
     };
+    // 1. This function builds the HTML cards using the data from your server
+async function fetchTeam() {
+    try {
+        const response = await fetch('/api/team');
+        const teamMembers = await response.json();
+        const container = document.getElementById('team-container');
+        
+        if (!container) return; // Safety check
+
+        // This clears the 'Jane Doe' placeholders and replaces them with real data
+        container.innerHTML = teamMembers.map(member => `
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
+                <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
+                <p class="text-[#00acc1] font-medium">${member.title}</p>
+                <p class="mt-2 text-gray-600 text-sm">${member.bio || ''}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error("Error loading team from database:", error);
+    }
+}
+
+// 2. This tells the browser: "As soon as the page is ready, run fetchTeam"
+document.addEventListener('DOMContentLoaded', () => {
+    fetchTeam();
+    // ... you can call your other fetch functions for Projects or Events here too
+});
 
     // Local in-memory fallback cache when server is unavailable
     const localCache = {
