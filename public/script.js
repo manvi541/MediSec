@@ -11,6 +11,69 @@ document.addEventListener('DOMContentLoaded', () => {
             return []; // Return empty array on error
         }
     };
+    // Function to fetch team members from the server and display them
+async function loadTeamMembers() {
+    try {
+        const response = await fetch('/api/team');
+        const members = await response.json();
+        const container = document.getElementById('team-container');
+
+        if (!container) return;
+
+        // Clear existing hardcoded members (like Jane Doe/John Smith)
+        container.innerHTML = '';
+
+        members.forEach(member => {
+            const memberCard = `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                    <img src="${member.image || 'images/default-avatar.png'}" alt="${member.name}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
+                    <h3 class="text-xl font-bold text-gray-900 mb-1">${member.name}</h3>
+                    <p class="text-[#00acc1] font-medium">${member.title}</p>
+                    <p class="mt-2 text-gray-600 text-sm">${member.bio || ''}</p>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', memberCard);
+        });
+    } catch (error) {
+        console.error("Error loading team members:", error);
+    }
+}
+
+// Function to handle the form submission in the Admin Panel
+const teamForm = document.getElementById('add-team-member-form');
+if (teamForm) {
+    teamForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('name', document.getElementById('new-member-name').value);
+        formData.append('title', document.getElementById('new-member-title').value);
+        formData.append('bio', document.getElementById('new-member-bio').value);
+
+        const imageFile = document.getElementById('new-member-image').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        try {
+            const response = await fetch('/api/team', {
+                method: 'POST',
+                body: formData // Note: No headers! Browser sets 'multipart/form-data' automatically
+            });
+
+            if (response.ok) {
+                alert('Team member added successfully!');
+                teamForm.reset();
+                loadTeamMembers(); // Refresh the list immediately
+            }
+        } catch (error) {
+            console.error("Error adding member:", error);
+        }
+    });
+}
+// Run loadTeamMembers as soon as the website opens
+document.addEventListener('DOMContentLoaded', loadTeamMembers);
+    
     // 1. This function builds the HTML cards using the data from your server
 async function fetchTeam() {
     try {
