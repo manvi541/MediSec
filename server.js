@@ -9,7 +9,7 @@ if (!serviceAccountKey) {
     process.exit(1);
 }
 
-// 2. FIREBASE INITIALIZATION (DATABASE ONLY)
+// 2. FIREBASE INITIALIZATION
 try {
     const serviceAccount = JSON.parse(serviceAccountKey);
     admin.initializeApp({
@@ -29,6 +29,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- HELPER FUNCTION ---
+// This handles fetching any collection by name
 const getCollection = async (collectionName) => {
     const snapshot = await db.collection(collectionName).get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -36,7 +37,7 @@ const getCollection = async (collectionName) => {
 
 // --- API ENDPOINTS ---
 
-// Team Members
+// 👥 TEAM MEMBERS
 app.get('/api/team', async (req, res) => {
     try {
         const team = await getCollection('team');
@@ -48,7 +49,6 @@ app.get('/api/team', async (req, res) => {
 
 app.post('/api/team', async (req, res) => {
     try {
-        // No images/multer here—just saving text data to Firestore
         const docRef = await db.collection('team').add(req.body);
         res.status(201).json({ id: docRef.id, ...req.body });
     } catch (error) {
@@ -56,7 +56,7 @@ app.post('/api/team', async (req, res) => {
     }
 });
 
-// Projects
+// 📁 PROJECTS
 app.get('/api/projects', async (req, res) => {
     try {
         const projects = await getCollection('projects');
@@ -66,7 +66,17 @@ app.get('/api/projects', async (req, res) => {
     }
 });
 
-// Events
+app.post('/api/projects', async (req, res) => {
+    try {
+        const docRef = await db.collection('projects').add(req.body);
+        res.status(201).json({ id: docRef.id, ...req.body });
+    } catch (error) {
+        res.status(500).json({ message: 'Error saving project' });
+    }
+});
+
+// 📅 EVENTS & VOLUNTEERING
+// We use one 'events' collection and use a 'type' field to distinguish them
 app.get('/api/events', async (req, res) => {
     try {
         const events = await getCollection('events');
@@ -76,11 +86,25 @@ app.get('/api/events', async (req, res) => {
     }
 });
 
-// Generic Delete
+app.post('/api/events', async (req, res) => {
+    try {
+        const eventData = {
+            ...req.body,
+            createdAt: admin.firestore.FieldValue.serverTimestamp() 
+        };
+        const docRef = await db.collection('events').add(eventData);
+        res.status(201).json({ id: docRef.id, ...eventData });
+    } catch (error) {
+        res.status(500).json({ message: 'Error saving event' });
+    }
+});
+
+// 🗑️ GENERIC DELETE
+// Works for: /api/team/ID, /api/projects/ID, or /api/events/ID
 app.delete('/api/:collection/:id', async (req, res) => {
     try {
         await db.collection(req.params.collection).doc(req.params.id).delete();
-        res.status(200).json({ message: 'Deleted' });
+        res.status(200).json({ message: 'Deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Delete failed' });
     }
@@ -93,5 +117,5 @@ app.get('*', (req, res) => {
 
 // --- START SERVER ---
 app.listen(PORT, () => {
-    console.log(`🚀 Server is live on Port ${PORT}`);
+    console.log(`🚀 MediSec Server is live on Port ${PORT}`);
 });
