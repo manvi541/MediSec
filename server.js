@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- HELPER FUNCTION ---
-// This handles fetching any collection by name
+// This fetches all documents from a specific collection and includes the document ID
 const getCollection = async (collectionName) => {
     const snapshot = await db.collection(collectionName).get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -37,7 +37,7 @@ const getCollection = async (collectionName) => {
 
 // --- API ENDPOINTS ---
 
-// 👥 TEAM MEMBERS
+// 👥 TEAM MEMBERS (Fields: name, role, bio, imageUrl)
 app.get('/api/team', async (req, res) => {
     try {
         const team = await getCollection('team');
@@ -56,7 +56,7 @@ app.post('/api/team', async (req, res) => {
     }
 });
 
-// 📁 PROJECTS
+// 📁 PROJECTS (Fields: title, description, status, imageUrl)
 app.get('/api/projects', async (req, res) => {
     try {
         const projects = await getCollection('projects');
@@ -75,8 +75,7 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
-// 📅 EVENTS & VOLUNTEERING
-// We use one 'events' collection and use a 'type' field to distinguish them
+// 📅 EVENTS & VOLUNTEERING (Fields: title, type, date, location, description, imageUrl)
 app.get('/api/events', async (req, res) => {
     try {
         const events = await getCollection('events');
@@ -100,7 +99,7 @@ app.post('/api/events', async (req, res) => {
 });
 
 // 🗑️ GENERIC DELETE
-// Works for: /api/team/ID, /api/projects/ID, or /api/events/ID
+// Usage: DELETE to /api/team/123, /api/projects/456, or /api/events/789
 app.delete('/api/:collection/:id', async (req, res) => {
     try {
         await db.collection(req.params.collection).doc(req.params.id).delete();
@@ -118,4 +117,5 @@ app.get('*', (req, res) => {
 // --- START SERVER ---
 app.listen(PORT, () => {
     console.log(`🚀 MediSec Server is live on Port ${PORT}`);
+    console.log(`🔗 Local link: http://localhost:${PORT}`);
 });
