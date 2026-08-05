@@ -15,7 +15,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow-x: hidden; /* Keep this to prevent horizontal scroll */
+            overflow-x: hidden;
         }
 
         /* Custom CSS for elements that need more styling */
@@ -58,10 +58,10 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            display: none; /* Hidden by default, toggled by JS */
+            display: none;
             align-items: center;
             justify-content: center;
-            z-index: 10000; /* Ensure it's on top */
+            z-index: 10000;
         }
 
         #custom-message-content {
@@ -75,9 +75,9 @@
         }
 
         #custom-message-text {
-            font-size: 1.125rem; /* text-lg */
+            font-size: 1.125rem;
             margin-bottom: 1.5rem;
-            color: #374151; /* gray-700 */
+            color: #374151;
         }
 
         #custom-message-buttons {
@@ -89,32 +89,32 @@
         #custom-message-confirm-btn,
         #custom-message-cancel-btn {
             padding: 0.75rem 1.5rem;
-            border-radius: 0.375rem; /* rounded-md */
-            font-weight: 600; /* font-semibold */
+            border-radius: 0.375rem;
+            font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out;
         }
 
         #custom-message-confirm-btn {
-            background-color: #00acc1; /* Your primary color */
+            background-color: #00acc1;
             color: white;
         }
 
         #custom-message-confirm-btn:hover {
-            background-color: #7a97ab; /* Your hover color */
+            background-color: #7a97ab;
         }
 
         #custom-message-cancel-btn {
-            background-color: #d1d5db; /* gray-300 */
-            color: #374151; /* gray-700 */
+            background-color: #d1d5db;
+            color: #374151;
         }
 
         #custom-message-cancel-btn:hover {
-            color: #9ca3af; /* gray-400 */
+            color: #9ca3af;
         }
     </style>
 </head>
-<body class="font-sans bg-gray-50">
+<body class="font-sans bg-gray-50 text-gray-900">
     <div id="custom-message-box" class="hidden">
         <div id="custom-message-content" class="bg-white p-8 rounded-lg shadow-xl">
             <p id="custom-message-text" class="text-lg mb-6"></p>
@@ -136,57 +136,54 @@
                 </div>
                 <div class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
                     <a href="#home" class="nav-link text-white px-3 py-2 text-sm font-medium">Home</a>
-                    <a href="#mission" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Our Mission</a>
-                    <a href="#events" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Events</a>
-                    <a href="#projects" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Volunteer Projects</a>
-                    <a href="#team" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Team</a>
-                    <a href="#instagram-feed" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Instagram</a>
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Make a Chapter</a>
+                    <a href="#mission" class="nav-link text-gray-200 hover:text-white px-3 py-2 text-sm font-medium">Our Mission</a>
+                    <a href="#events" class="nav-link text-gray-200 hover:text-white px-3 py-2 text-sm font-medium">Events</a>
+                    <a href="#projects" class="nav-link text-gray-200 hover:text-white px-3 py-2 text-sm font-medium">Volunteer Projects</a>
+                    <a href="#team" class="nav-link text-gray-200 hover:text-white px-3 py-2 text-sm font-medium">Team</a>
+                    <a href="#instagram-feed" class="nav-link text-gray-200 hover:text-white px-3 py-2 text-sm font-medium">Instagram</a>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="nav-link text-gray-200 hover:text-white px-3 py-2 text-sm font-medium">Make a Chapter</a>
                     <a href="#join" class="bg-[#00acc1] hover:bg-[#7a97ab] text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300 pulse">Get Involved</a>
                 </div>
                 <div class="-mr-2 flex items-center md:hidden">
-                    <button type="button" id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00acc1]">
+                    <button type="button" id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-[#a10b0b] focus:outline-none">
                         <span class="sr-only">Open main menu</span>
                         <i class="fas fa-bars"></i>
-                    </button>
-                    <button id="theme-toggle" class="fixed top-5 right-5 z-50 p-3 bg-gray-800 text-white rounded-full shadow-lg">
-                        <i id="theme-icon" class="fas fa-moon"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="hidden md:hidden" id="mobile-menu">
+        <div class="hidden md:hidden bg-white border-b border-gray-200" id="mobile-menu">
             <div class="pt-2 pb-3 space-y-1">
-                <a href="#home" class="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-800 hover:bg-gray-50">Home</a>
-                <a href="#mission" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Mission</a>
-                <a href="#events" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Events</a>
-                <a href="#projects" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Blogs</a>
-                <a href="#team" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Team</a>
-                <a href="#instagram-feed" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Instagram</a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50">Make a Chapter</a>
-                <a href="#join" class="block px-3 py-2 text-base font-medium text-[#00acc1] hover:text-[#9ad8fa] hover:bg-blue-50">Join Us</a>
+                <a href="#home" class="block px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">Home</a>
+                <a href="#mission" class="block px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Mission</a>
+                <a href="#events" class="block px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Events</a>
+                <a href="#projects" class="block px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Blogs & Projects</a>
+                <a href="#team" class="block px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Team</a>
+                <a href="#instagram-feed" class="block px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Instagram</a>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Make a Chapter</a>
+                <a href="#join" class="block px-3 py-2 text-base font-medium text-[#00acc1] hover:bg-blue-50">Join Us</a>
             </div>
         </div>
     </nav>
 
-    <section id="home" class="relative text-white py-20 md:py-32 animate-fade-in bg-blue-500">
-        <div class="absolute inset-0 bg-blue-100">
-            <img src="https://www.securitymagazine.com/ext/resources/images/healthcare-freepik1170x658v57.jpg?1658154933" alt="Healthcare Security" class="w-full h-full object-cover opacity-25">
+    <section id="home" class="relative text-white py-20 md:py-32 bg-[#00acc1]">
+        <div class="absolute inset-0 bg-blue-900">
+            <img src="https://www.securitymagazine.com/ext/resources/images/healthcare-freepik1170x658v57.jpg?1658154933" alt="Healthcare Security" class="w-full h-full object-cover opacity-20">
         </div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center lg:text-left">
             <div class="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
                 <div class="mb-12 lg:mb-0">
-                    <h1 class="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg animate-slide-up hero-title-shadow" style="animation-delay: 0.3s">Welcome to MediSec</h1>
-                    <p class="text-xl mb-8 opacity-90 animate-slide-up" style="animation-delay: 0.6s">MediSec empowers innovation and creativity through cutting-edge solutions and collaborative initiatives.</p>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg">Welcome to MediSec</h1>
+                    <p class="text-xl mb-8 opacity-90">MediSec empowers innovation and creativity through cutting-edge solutions and collaborative initiatives.</p>
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start">
-                        <a href="#join" class="bg-white text-[#00acc1] hover:bg-gray-100 px-6 py-3 rounded-md text-lg font-semibold text-center transition duration-300 pulse">Join Our Initiative</a>
+                        <a href="#join" class="bg-white text-[#00acc1] hover:bg-gray-100 px-6 py-3 rounded-md text-lg font-semibold text-center transition duration-300">Join Our Initiative</a>
                         <a href="#mission" class="border-2 border-white hover:bg-white hover:text-[#00acc1] px-6 py-3 rounded-md text-lg font-semibold text-center transition duration-300">Learn More</a>
                     </div>
                 </div>
-                <div class="relative hidden lg:block animate-zoom-in" style="animation-delay: 0.9s">
-                    <div class="bg-[#00acc1] rounded-lg shadow-lg p-4 inline-block">
-                        <p class="text-white font-medium">Innovating for a healthier, safer tomorrow</p>
+                <div class="relative hidden lg:block">
+                    <div class="bg-white/10 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/20">
+                        <p class="text-white text-lg font-medium">Innovating for a healthier, safer tomorrow</p>
                     </div>
                 </div>
             </div>
@@ -196,16 +193,16 @@
     <section class="bg-white py-12 border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm stat-animate" style="animation-delay: 0.2s">
-                    <div class="text-[#00acc1] text-4xl font-bold mb-2" id="stat1">93%</div>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="text-[#00acc1] text-4xl font-bold mb-2">93%</div>
                     <div class="text-gray-600">of healthcare organizations experienced a data breach in the past 3 years</div>
                 </div>
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm stat-animate" style="animation-delay: 0.4s">
-                    <div class="text-[#00acc1] text-4xl font-bold mb-2" id="stat2">$10M+</div>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="text-[#00acc1] text-4xl font-bold mb-2">$10M+</div>
                     <div class="text-gray-600">average cost of a healthcare data breach</div>
                 </div>
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm stat-animate" style="animation-delay: 0.6s">
-                    <div class="text-[#00acc1] text-4xl font-bold mb-2" id="stat3">300%</div>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="text-[#00acc1] text-4xl font-bold mb-2">300%</div>
                     <div class="text-gray-600">increase in cyberattacks on healthcare since 2020</div>
                 </div>
             </div>
@@ -215,21 +212,20 @@
     <section id="mission" class="py-20 bg-gray-50 border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Our Mission</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
                 <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-                
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6 animate-slide-right" style="animation-delay: 0.3s">Empowering healthcare technology against cyber threats</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Empowering healthcare technology against cyber threats</h3>
                     <p class="text-gray-700 mb-8 leading-relaxed">MediSec is a nonprofit initiative dedicated to bridging the knowledge gap in healthcare cybersecurity. We believe that education and collaboration are the keys to protecting sensitive patient data and critical medical infrastructure.</p>
 
                     <div class="space-y-8">
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <div class="flex items-center justify-center h-12 w-12 rounded-md bg-[#e0f2fe] text-[#00acc1]">
-                                    <i class="fas fa-graduation-cap"></i>
+                                    <i class="fas fa-graduation-cap text-xl"></i>
                                 </div>
                             </div>
                             <div class="ml-4">
@@ -241,7 +237,7 @@
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <div class="flex items-center justify-center h-12 w-12 rounded-md bg-[#e0f2fe] text-[#00acc1]">
-                                    <i class="fas fa-microscope"></i>
+                                    <i class="fas fa-microscope text-xl"></i>
                                 </div>
                             </div>
                             <div class="ml-4">
@@ -253,7 +249,7 @@
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <div class="flex items-center justify-center h-12 w-12 rounded-md bg-[#e0f2fe] text-[#00acc1]">
-                                    <i class="fas fa-hand-holding-heart"></i>
+                                    <i class="fas fa-hand-holding-heart text-xl"></i>
                                 </div>
                             </div>
                             <div class="ml-4">
@@ -270,7 +266,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200 animate-slide-left" style="animation-delay: 0.6s">
+                <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200">
                     <h3 class="text-2xl font-bold text-gray-900 mb-6">Our Core Values</h3>
                     <div class="space-y-6">
                         <div class="flex items-start">
@@ -304,15 +300,14 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
 
-    <section id="events" class="py-20 bg-gray-50 animate-fade-in border-t-2 border-[#00acc1]">
+    <section id="events" class="py-20 bg-gray-50 border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Events & Volunteer Opportunities</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Events & Volunteer Opportunities</h2>
                 <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
                 <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">See our past events and current volunteer opportunities.</p>
             </div>
@@ -323,10 +318,10 @@
         </div>
     </section>
 
-    <section id="projects" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
+    <section id="projects" class="py-20 bg-white border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Projects & Blogs</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Projects & Blogs</h2>
                 <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
                 <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">Explore our latest cybersecurity projects and blog posts</p>
             </div>
@@ -341,10 +336,10 @@
         </div>
     </section>
 
-    <section id="instagram-feed" class="py-20 bg-gray-50 animate-fade-in border-t-2 border-[#00acc1]">
+    <section id="instagram-feed" class="py-20 bg-gray-50 border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 section-title-shadow">Latest from Instagram</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Latest from Instagram</h2>
                 <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
                 <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">Follow us for more updates and insights!</p>
             </div>
@@ -362,16 +357,21 @@
         </div>
     </section>
 
-    <section id="team" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
+    <section id="team" class="py-20 bg-white border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Our Leadership & Team</h2>
+                <div class="w-20 h-1 bg-[#00acc1] mx-auto"></div>
+            </div>
+
             <div id="team-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 border border-gray-100 card-hover">
                     <img src="images/image_e87710.jpg" alt="Team Member 1" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
                     <h3 class="text-xl font-bold text-gray-900 mb-1">Jane Doe</h3>
                     <p class="text-[#00acc1] font-medium">Chief Medical Officer</p>
                     <p class="mt-2 text-gray-600 text-sm">Jane has over 15 years of experience in healthcare administration and is passionate about leveraging technology to improve patient care.</p>
                 </div>
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 card-hover animate-zoom-in">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-6 border border-gray-100 card-hover">
                     <img src="images/image_e87749.jpg" alt="Team Member 2" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-[#00acc1]">
                     <h3 class="text-xl font-bold text-gray-900 mb-1">John Smith</h3>
                     <p class="text-[#00acc1] font-medium">Lead Developer</p>
@@ -445,11 +445,11 @@
         </div>
     </section>
 
-    <section id="join" class="py-20 bg-white animate-fade-in border-t-2 border-[#00acc1]">
+    <section id="join" class="py-20 bg-gray-50 border-t-2 border-[#00acc1]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="lg:grid lg:grid-cols-2 lg:gap-12 items-center">
                 <div class="mb-12 lg:mb-0">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 section-title-shadow">Join the MediSec Initiative</h2>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Join the MediSec Initiative</h2>
                     <p class="text-gray-600 mb-6">Whether you're a high school student, college student, healthcare professional, or cybersecurity expert, there are many ways to get involved with our mission to secure healthcare technology.</p>
 
                     <div class="bg-[#e0f2fe] p-6 rounded-lg mb-8">
@@ -481,15 +481,15 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 mb-3">Ways to Get Involved</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                                 <h4 class="font-bold text-gray-900 mb-2"><i class="fas fa-user-graduate text-[#00acc1] mr-2"></i> Student Member & Volunteer</h4>
                                 <p class="mt-1 text-gray-600 text-sm">Join our student programs and projects. <a href="https://docs.google.com/forms/d/e/1FAIpQLSdd1hxEG79-HGxaqCG7_z3yu779abh2kEtcMeUsDleeCGst0g/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-semibold">Apply Here</a></p>
                             </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-[#00acc1] mb-2"><i class="fas fa-hands-helping text-[#00acc1] mr-2"></i> Make a Chapter</h4>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                <h4 class="font-bold text-gray-900 mb-2"><i class="fas fa-hands-helping text-[#00acc1] mr-2"></i> Make a Chapter</h4>
                                 <p class="mt-1 text-gray-600 text-sm">Start a MediSec chapter in your area. <a href="https://docs.google.com/forms/d/e/1FAIpQLSfpM31XfcrPcX59JgfCIW7_VaLTv4D4ssHnQN-vLKC2MVGiRA/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-semibold">Apply Here</a></p>
                             </div>
-                            <div class="bg-gray-50 p-4 rounded-lg md:col-span-2">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
                                 <h4 class="font-bold text-gray-900 mb-2"><i class="fas fa-hand-holding-heart text-[#00acc1] mr-2"></i> Donor & Partner</h4>
                                 <p class="mt-1 text-gray-600 text-sm">Support our cause financially or through strategic partnerships. Contact us to learn more.</p>
                             </div>
